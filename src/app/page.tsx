@@ -140,7 +140,7 @@ export default function Home() {
   );
 
   /**
-   * 🚀 PARALLEL BATCH CONVERSION
+   * PARALLEL BATCH CONVERSION
    * Processes multiple images simultaneously for maximum speed
    */
   const handleConvert = useCallback(async () => {
@@ -186,7 +186,7 @@ export default function Home() {
 
     const startTime = performance.now();
 
-    // 🚀 PARALLEL PROCESSING - Multiple images at once!
+    // PARALLEL PROCESSING - Multiple images at once!
     const results = await convertImagesParallel(
       preparedImages,
       options,
@@ -230,7 +230,7 @@ export default function Home() {
 
     if (successCount > 0) {
       toast.success(
-        `⚡ Converted ${successCount} image${successCount > 1 ? "s" : ""} in ${duration}s`
+        `Converted ${successCount} image${successCount > 1 ? "s" : ""} in ${duration}s`
       );
     }
     if (errorCount > 0) {
@@ -379,7 +379,7 @@ export default function Home() {
                 <div className="mb-2 flex justify-center">
                   <Zap className="w-6 h-6 text-primary" />
                 </div>
-                <h3 className="font-mono font-semibold text-sm mb-1">⚡ Parallel Processing</h3>
+                <h3 className="font-mono font-semibold text-sm mb-1">Parallel Processing</h3>
                 <p className="text-xs text-muted-foreground">
                   6x faster with concurrent conversion
                 </p>
