@@ -86,13 +86,15 @@ export function ImageUploader({ onFilesAdded, compact = false }: ImageUploaderPr
       onDragOver={handleDragOver}
       onDrop={handleDrop}
       className={cn(
-        "relative border-2 border-dashed rounded-lg transition-all duration-200 cursor-pointer",
-        "hover:border-primary/50 hover:bg-primary/5",
+        "relative border-2 border-dashed rounded-xl transition-all duration-200 cursor-pointer",
+        "hover:border-primary/50 hover:bg-primary/5 hover:shadow-md",
         "focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background",
         isDragging
-          ? "border-primary bg-primary/10 scale-[1.01]"
+          ? "border-primary bg-primary/10 scale-[1.01] shadow-lg"
           : "border-border",
-        compact ? "p-4" : "p-12"
+        compact 
+          ? "p-4 max-w-full" 
+          : "p-10 max-w-2xl mx-auto"
       )}
     >
       <input
@@ -106,25 +108,31 @@ export function ImageUploader({ onFilesAdded, compact = false }: ImageUploaderPr
       />
 
       <div className={cn(
-        "flex items-center justify-center gap-3 text-center",
+        "flex items-center justify-center gap-4 text-center",
         compact ? "flex-row" : "flex-col"
       )}>
         <div
           className={cn(
-            "rounded-full transition-colors",
-            isDragging ? "bg-primary/20" : "bg-muted",
-            compact ? "p-2" : "p-4"
+            "rounded-full transition-all duration-200 flex items-center justify-center",
+            isDragging 
+              ? "bg-primary/20 scale-110" 
+              : "bg-muted hover:bg-muted/80",
+            compact ? "p-2.5" : "p-5"
           )}
         >
           {isDragging ? (
-            <ImagePlus className={cn("text-primary", compact ? "w-5 h-5" : "w-8 h-8")} />
+            <ImagePlus className={cn("text-primary transition-transform", compact ? "w-5 h-5" : "w-10 h-10")} />
           ) : (
-            <Upload className={cn("text-muted-foreground", compact ? "w-5 h-5" : "w-8 h-8")} />
+            <Upload className={cn("text-muted-foreground transition-colors hover:text-primary", compact ? "w-5 h-5" : "w-10 h-10")} />
           )}
         </div>
 
-        <div className={cn("space-y-1", compact && "text-left")}>
-          <p className={cn("font-medium", compact ? "text-sm" : "text-lg")}>
+        <div className={cn("space-y-2", compact && "text-left space-y-0.5")}>
+          <p className={cn(
+            "font-semibold transition-colors",
+            isDragging && "text-primary",
+            compact ? "text-sm" : "text-xl"
+          )}>
             {isDragging ? "Drop images here" : compact ? "Add more images" : "Drag & drop images here"}
           </p>
           {!compact && (
@@ -132,7 +140,7 @@ export function ImageUploader({ onFilesAdded, compact = false }: ImageUploaderPr
               <p className="text-sm text-muted-foreground">
                 or click to browse files
               </p>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-muted-foreground/80 pt-1">
                 Supports JPEG, PNG, GIF, WebP, BMP, TIFF
               </p>
             </>

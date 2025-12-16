@@ -8,6 +8,7 @@ import { Header } from "@/components/header";
 import { toast } from "sonner";
 import { convertImage } from "@/lib/image-converter";
 import { downloadAsZip } from "@/lib/zip-download";
+import { Settings, Zap, Package, Heart } from "lucide-react";
 
 export interface ImageFile {
   id: string;
@@ -274,10 +275,10 @@ export default function Home() {
         {images.length === 0 && (
           <section className="text-center space-y-4 py-8 mb-8">
             <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-              Image <span className="text-primary">Converter</span>
+              AI Image <span className="text-primary">Converter</span>
             </h1>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              High-quality conversion powered by Sharp. WebP, AVIF, PNG, JPEG.
+              Built for web devs who need optimized images. No data stored, ever.
             </p>
           </section>
         )}
@@ -318,21 +319,27 @@ export default function Home() {
           <section className="text-center py-8 space-y-6">
             <div className="grid md:grid-cols-3 gap-6 max-w-3xl mx-auto">
               <div className="p-6 rounded-lg bg-card border border-border">
-                <div className="text-3xl mb-3">🔧</div>
+                <div className="mb-3 flex justify-center">
+                  <Settings className="w-8 h-8 text-primary" />
+                </div>
                 <h3 className="font-semibold mb-2">Sharp Powered</h3>
                 <p className="text-sm text-muted-foreground">
                   High-quality libvips processing
                 </p>
               </div>
               <div className="p-6 rounded-lg bg-card border border-border">
-                <div className="text-3xl mb-3">⚡</div>
+                <div className="mb-3 flex justify-center">
+                  <Zap className="w-8 h-8 text-primary" />
+                </div>
                 <h3 className="font-semibold mb-2">Multi-Format</h3>
                 <p className="text-sm text-muted-foreground">
                   WebP, AVIF, PNG, JPEG output
                 </p>
               </div>
               <div className="p-6 rounded-lg bg-card border border-border">
-                <div className="text-3xl mb-3">📦</div>
+                <div className="mb-3 flex justify-center">
+                  <Package className="w-8 h-8 text-primary" />
+                </div>
                 <h3 className="font-semibold mb-2">Batch Convert</h3>
                 <p className="text-sm text-muted-foreground">
                   Convert multiple images at once
@@ -345,10 +352,18 @@ export default function Home() {
 
       <footer className="border-t border-border py-6 mt-auto">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          <p>
-            Built for web developers who need optimized images.
-            <span className="mx-2">•</span>
-            No data stored, ever.
+          <p className="flex items-center justify-center gap-1.5">
+            Made with{" "}
+            <Heart className="w-4 h-4 text-orange-500 fill-orange-500" />
+            by{" "}
+            <a
+              href="https://pixelmango.studio/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:underline font-medium"
+            >
+              Pixel Mango
+            </a>
           </p>
         </div>
       </footer>
