@@ -14,16 +14,17 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "WebP Converter | Fast Client-Side Image Conversion",
+  title: "Image Converter | WebP, AVIF, PNG, JPEG",
   description:
-    "Convert images to WebP format instantly in your browser. No uploads, no server processing. 100% private and free.",
+    "High-quality image conversion powered by Sharp. Convert to WebP, AVIF, PNG, JPEG with quality control and resizing. Fast and efficient.",
   keywords: [
-    "webp converter",
     "image converter",
-    "webp",
+    "webp converter",
+    "avif converter",
     "image optimization",
     "compress images",
-    "client-side conversion",
+    "sharp",
+    "libvips",
   ],
 };
 

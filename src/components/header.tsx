@@ -12,7 +12,7 @@ export function Header() {
             <ImageIcon className="w-5 h-5" />
           </div>
           <span className="font-semibold text-lg tracking-tight">
-            WebP Converter
+            Image Converter
           </span>
         </div>
 

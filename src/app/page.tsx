@@ -6,6 +6,8 @@ import { ImagePreviewGrid } from "@/components/image-preview-grid";
 import { ConversionSettings } from "@/components/conversion-settings";
 import { Header } from "@/components/header";
 import { toast } from "sonner";
+import { convertImage, getFileExtension } from "@/lib/image-converter";
+import { downloadAsZip } from "@/lib/zip-download";
 
 export interface ImageFile {
   id: string;
@@ -17,13 +19,17 @@ export interface ImageFile {
   convertedBlob?: Blob;
   convertedSize?: number;
   convertedUrl?: string;
+  outputFormat?: OutputFormat;
 }
+
+export type OutputFormat = "webp" | "avif" | "png" | "jpeg";
 
 export interface ConversionOptions {
   quality: number;
   maxWidth: number;
   maxHeight: number;
   maintainAspectRatio: boolean;
+  format: OutputFormat;
 }
 
 const defaultOptions: ConversionOptions = {
@@ -31,12 +37,14 @@ const defaultOptions: ConversionOptions = {
   maxWidth: 1920,
   maxHeight: 1080,
   maintainAspectRatio: true,
+  format: "webp",
 };
 
 export default function Home() {
   const [images, setImages] = useState<ImageFile[]>([]);
   const [options, setOptions] = useState<ConversionOptions>(defaultOptions);
   const [isConverting, setIsConverting] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const handleFilesAdded = useCallback((files: File[]) => {
     const validTypes = ["image/jpeg", "image/png", "image/gif", "image/webp", "image/bmp", "image/tiff"];
@@ -97,6 +105,107 @@ export default function Home() {
     []
   );
 
+  const handleConvert = useCallback(async () => {
+    const pendingImages = images.filter((img) => img.status === "pending");
+    
+    if (pendingImages.length === 0) {
+      toast.info("No images to convert");
+      return;
+    }
+
+    setIsConverting(true);
+    let successCount = 0;
+    let errorCount = 0;
+
+    // Convert images sequentially to avoid overwhelming the browser
+    for (const image of pendingImages) {
+      try {
+        // Update status to converting
+        updateImageStatus(image.id, { status: "converting" });
+
+        // Perform conversion using Sharp via API
+        const result = await convertImage(image.file, options);
+
+        // Update with converted data
+        updateImageStatus(image.id, {
+          status: "done",
+          convertedBlob: result.blob,
+          convertedSize: result.size,
+          convertedUrl: result.url,
+          outputFormat: options.format,
+        });
+
+        successCount++;
+      } catch (error) {
+        console.error(`Failed to convert ${image.name}:`, error);
+        updateImageStatus(image.id, {
+          status: "error",
+        });
+        errorCount++;
+        toast.error(`Failed to convert ${image.name}`);
+      }
+    }
+
+    setIsConverting(false);
+
+    // Show summary toast
+    if (successCount > 0) {
+      toast.success(
+        `Successfully converted ${successCount} image${successCount > 1 ? "s" : ""}`
+      );
+    }
+    if (errorCount > 0) {
+      toast.error(
+        `Failed to convert ${errorCount} image${errorCount > 1 ? "s" : ""}`
+      );
+    }
+  }, [images, options, updateImageStatus]);
+
+  const handleDownloadZip = useCallback(async () => {
+    const convertedImages = images.filter((img) => img.status === "done");
+    
+    if (convertedImages.length === 0) {
+      toast.info("No converted images to download");
+      return;
+    }
+
+    setIsDownloading(true);
+    try {
+      await downloadAsZip(images, options.format, `${options.format}-images`);
+      toast.success(`Downloaded ${convertedImages.length} images as ZIP`);
+    } catch (error) {
+      console.error("Failed to create ZIP:", error);
+      toast.error("Failed to create ZIP file");
+    } finally {
+      setIsDownloading(false);
+    }
+  }, [images]);
+
+  const handleRetry = useCallback(
+    async (id: string) => {
+      const image = images.find((img) => img.id === id);
+      if (!image) return;
+
+      try {
+        updateImageStatus(id, { status: "converting" });
+        const result = await convertImage(image.file, options);
+        updateImageStatus(id, {
+          status: "done",
+          convertedBlob: result.blob,
+          convertedSize: result.size,
+          convertedUrl: result.url,
+          outputFormat: options.format,
+        });
+        toast.success(`Successfully converted ${image.name}`);
+      } catch (error) {
+        console.error(`Failed to convert ${image.name}:`, error);
+        updateImageStatus(id, { status: "error" });
+        toast.error(`Failed to convert ${image.name}`);
+      }
+    },
+    [images, options, updateImageStatus]
+  );
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -106,11 +215,11 @@ export default function Home() {
           {/* Hero Section */}
           <section className="text-center space-y-4 py-8">
             <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-              Convert to <span className="text-primary">WebP</span>
+              Image <span className="text-primary">Converter</span>
             </h1>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              Fast, private image conversion. Everything happens in your browser.
-              No uploads, no servers, no tracking.
+              High-quality image conversion powered by Sharp (libvips).
+              WebP, AVIF, PNG, JPEG — fast and efficient.
             </p>
           </section>
 
@@ -125,14 +234,11 @@ export default function Home() {
                   options={options}
                   onOptionsChange={setOptions}
                   images={images}
-                  onConvert={async () => {
-                    // Conversion logic will be added in Segment 4
-                    setIsConverting(true);
-                    toast.info("Conversion coming in next segment!");
-                    setIsConverting(false);
-                  }}
+                  onConvert={handleConvert}
+                  onDownloadZip={handleDownloadZip}
                   onClearAll={handleClearAll}
                   isConverting={isConverting}
+                  isDownloading={isDownloading}
                 />
               </aside>
               
@@ -140,6 +246,7 @@ export default function Home() {
                 <ImagePreviewGrid
                   images={images}
                   onRemove={handleRemoveImage}
+                  onRetry={handleRetry}
                 />
               </section>
             </div>
@@ -150,17 +257,17 @@ export default function Home() {
             <section className="text-center py-8 space-y-6">
               <div className="grid md:grid-cols-3 gap-6 max-w-3xl mx-auto">
                 <div className="p-6 rounded-lg bg-card border border-border">
-                  <div className="text-3xl mb-3">🔒</div>
-                  <h3 className="font-semibold mb-2">100% Private</h3>
+                  <div className="text-3xl mb-3">🔧</div>
+                  <h3 className="font-semibold mb-2">Sharp Powered</h3>
                   <p className="text-sm text-muted-foreground">
-                    Your images never leave your device
+                    High-quality libvips processing
                   </p>
                 </div>
                 <div className="p-6 rounded-lg bg-card border border-border">
                   <div className="text-3xl mb-3">⚡</div>
-                  <h3 className="font-semibold mb-2">Lightning Fast</h3>
+                  <h3 className="font-semibold mb-2">Multi-Format</h3>
                   <p className="text-sm text-muted-foreground">
-                    Client-side processing for instant results
+                    WebP, AVIF, PNG, JPEG output
                   </p>
                 </div>
                 <div className="p-6 rounded-lg bg-card border border-border">
@@ -168,8 +275,8 @@ export default function Home() {
                   <h3 className="font-semibold mb-2">Batch Convert</h3>
                   <p className="text-sm text-muted-foreground">
                     Convert multiple images at once
-          </p>
-        </div>
+                  </p>
+                </div>
               </div>
             </section>
           )}

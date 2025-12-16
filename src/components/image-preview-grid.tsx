@@ -1,17 +1,25 @@
 "use client";
 
 import Image from "next/image";
-import { X, Check, Loader2, AlertCircle, Download } from "lucide-react";
+import { X, Check, Loader2, AlertCircle, Download, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import type { ImageFile } from "@/app/page";
+import type { ImageFile, OutputFormat } from "@/app/page";
 
 interface ImagePreviewGridProps {
   images: ImageFile[];
   onRemove: (id: string) => void;
+  onRetry: (id: string) => Promise<void>;
 }
+
+const FORMAT_EXTENSIONS: Record<OutputFormat, string> = {
+  webp: ".webp",
+  avif: ".avif",
+  png: ".png",
+  jpeg: ".jpg",
+};
 
 function formatFileSize(bytes: number): string {
   if (bytes === 0) return "0 B";
@@ -45,11 +53,7 @@ function getStatusBadge(status: ImageFile["status"]) {
         </Badge>
       );
     case "done":
-      return (
-        <Badge variant="secondary" className="bg-green-500/20 text-green-400">
-          Done
-        </Badge>
-      );
+      return null; // Format badge shown separately
     case "error":
       return (
         <Badge variant="secondary" className="bg-red-500/20 text-red-400">
@@ -61,13 +65,14 @@ function getStatusBadge(status: ImageFile["status"]) {
   }
 }
 
-export function ImagePreviewGrid({ images, onRemove }: ImagePreviewGridProps) {
+export function ImagePreviewGrid({ images, onRemove, onRetry }: ImagePreviewGridProps) {
   const handleDownload = (image: ImageFile) => {
     if (!image.convertedUrl || !image.convertedBlob) return;
 
+    const extension = FORMAT_EXTENSIONS[image.outputFormat || "webp"];
     const link = document.createElement("a");
     link.href = image.convertedUrl;
-    link.download = image.name.replace(/\.[^/.]+$/, "") + ".webp";
+    link.download = image.name.replace(/\.[^/.]+$/, "") + extension;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -131,6 +136,18 @@ export function ImagePreviewGrid({ images, onRemove }: ImagePreviewGridProps) {
                   <Download className="w-4 h-4" />
                 </Button>
               )}
+
+              {/* Retry Button (when error) */}
+              {image.status === "error" && (
+                <Button
+                  variant="secondary"
+                  size="icon"
+                  className="absolute top-2 left-2 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                  onClick={() => onRetry(image.id)}
+                >
+                  <RotateCcw className="w-4 h-4" />
+                </Button>
+              )}
             </div>
 
             {/* Info */}
@@ -165,7 +182,14 @@ export function ImagePreviewGrid({ images, onRemove }: ImagePreviewGridProps) {
                 )}
               </div>
 
-              {getStatusBadge(image.status)}
+              <div className="flex items-center gap-2">
+                {getStatusBadge(image.status)}
+                {image.status === "done" && image.outputFormat && (
+                  <Badge variant="secondary" className="bg-green-500/20 text-green-400 uppercase text-[10px]">
+                    {image.outputFormat}
+                  </Badge>
+                )}
+              </div>
             </div>
           </Card>
         ))}

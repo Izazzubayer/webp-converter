@@ -1,20 +1,22 @@
 "use client";
 
-import { Trash2, Download, Loader2 } from "lucide-react";
+import { Trash2, Download, Loader2, Archive } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import type { ImageFile, ConversionOptions } from "@/app/page";
+import type { ImageFile, ConversionOptions, OutputFormat } from "@/app/page";
 
 interface ConversionSettingsProps {
   options: ConversionOptions;
   onOptionsChange: (options: ConversionOptions) => void;
   images: ImageFile[];
   onConvert: () => Promise<void>;
+  onDownloadZip: () => Promise<void>;
   onClearAll: () => void;
   isConverting: boolean;
+  isDownloading: boolean;
 }
 
 export function ConversionSettings({
@@ -22,8 +24,10 @@ export function ConversionSettings({
   onOptionsChange,
   images,
   onConvert,
+  onDownloadZip,
   onClearAll,
   isConverting,
+  isDownloading,
 }: ConversionSettingsProps) {
   const pendingCount = images.filter((img) => img.status === "pending").length;
   const doneCount = images.filter((img) => img.status === "done").length;
@@ -34,6 +38,32 @@ export function ConversionSettings({
         <CardTitle className="text-lg">Conversion Settings</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
+        {/* Output Format */}
+        <div className="space-y-3">
+          <label className="text-sm font-medium">Output Format</label>
+          <div className="grid grid-cols-4 gap-2">
+            {(["webp", "avif", "png", "jpeg"] as OutputFormat[]).map((format) => (
+              <Button
+                key={format}
+                variant={options.format === format ? "default" : "outline"}
+                size="sm"
+                className="text-xs h-9 uppercase"
+                onClick={() => onOptionsChange({ ...options, format })}
+              >
+                {format}
+              </Button>
+            ))}
+          </div>
+          <p className="text-xs text-muted-foreground">
+            {options.format === "webp" && "Best balance of quality & size"}
+            {options.format === "avif" && "Smallest size, modern browsers"}
+            {options.format === "png" && "Lossless, supports transparency"}
+            {options.format === "jpeg" && "Universal, good compression"}
+          </p>
+        </div>
+
+        <Separator />
+
         {/* Quality Slider */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
@@ -170,9 +200,23 @@ export function ConversionSettings({
           </Button>
 
           {doneCount > 0 && (
-            <Button variant="secondary" className="w-full" disabled={isConverting}>
-              <Download className="w-4 h-4 mr-2" />
-              Download All as ZIP
+            <Button
+              variant="secondary"
+              className="w-full"
+              onClick={onDownloadZip}
+              disabled={isConverting || isDownloading}
+            >
+              {isDownloading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Creating ZIP...
+                </>
+              ) : (
+                <>
+                  <Archive className="w-4 h-4 mr-2" />
+                  Download All as ZIP ({doneCount})
+                </>
+              )}
             </Button>
           )}
 
