@@ -1,11 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import { X, Check, Loader2, AlertCircle, Download, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { ImageViewer } from "@/components/image-viewer";
 import type { ImageFile, OutputFormat } from "@/app/page";
 
 interface ImagePreviewGridProps {
@@ -66,6 +67,8 @@ function getStatusBadge(status: ImageFile["status"]) {
 }
 
 export function ImagePreviewGrid({ images, onRemove, onRetry }: ImagePreviewGridProps) {
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+
   const handleDownload = (image: ImageFile) => {
     if (!image.convertedUrl || !image.convertedBlob) return;
 
@@ -78,120 +81,136 @@ export function ImagePreviewGrid({ images, onRemove, onRetry }: ImagePreviewGrid
     document.body.removeChild(link);
   };
 
+  const handleImageClick = (index: number) => {
+    setSelectedIndex(index);
+  };
+
+  const handleCloseViewer = () => {
+    setSelectedIndex(null);
+  };
+
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold">
-          Images ({images.length})
-        </h2>
-        <div className="text-sm text-muted-foreground">
-          {images.filter((img) => img.status === "done").length} converted
-        </div>
+    <div className="space-y-3">
+      <ImageViewer
+        images={images}
+        currentIndex={selectedIndex}
+        onClose={handleCloseViewer}
+        onDownload={handleDownload}
+      />
+      <div className="flex items-center justify-between text-sm text-muted-foreground">
+        <span>
+          {images.length} image{images.length !== 1 ? "s" : ""}
+          {images.filter((img) => img.status === "done").length > 0 && (
+            <span className="ml-2">
+              • {images.filter((img) => img.status === "done").length} converted
+            </span>
+          )}
+        </span>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
         {images.map((image) => (
-          <Card
+          <div
             key={image.id}
-            className={cn(
-              "group relative overflow-hidden transition-all duration-200",
-              "hover:ring-2 hover:ring-primary/20"
-            )}
+            className="group"
           >
             {/* Image Preview */}
-            <div className="relative aspect-video bg-muted">
+            <div
+              className="relative aspect-square bg-muted rounded overflow-hidden cursor-pointer"
+              onClick={() => handleImageClick(images.indexOf(image))}
+            >
               <Image
                 src={image.convertedUrl || image.preview}
                 alt={image.name}
                 fill
                 className="object-cover"
-                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 20vw, 16vw"
               />
               
               {/* Status Overlay */}
               {image.status === "converting" && (
-                <div className="absolute inset-0 bg-background/80 flex items-center justify-center">
-                  <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                <div className="absolute inset-0 bg-background/90 flex items-center justify-center">
+                  <Loader2 className="w-6 h-6 animate-spin text-primary" />
                 </div>
               )}
 
-              {/* Remove Button */}
-              <Button
-                variant="destructive"
-                size="icon"
-                className="absolute top-2 right-2 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
-                onClick={() => onRemove(image.id)}
+              {/* Action Buttons */}
+              <div
+                className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 flex items-center justify-center gap-2"
+                onClick={(e) => e.stopPropagation()}
               >
-                <X className="w-4 h-4" />
-              </Button>
-
-              {/* Download Button (when done) */}
-              {image.status === "done" && (
+                {image.status === "done" && (
+                  <Button
+                    variant="secondary"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => handleDownload(image)}
+                  >
+                    <Download className="w-4 h-4" />
+                  </Button>
+                )}
+                {image.status === "error" && (
+                  <Button
+                    variant="secondary"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => onRetry(image.id)}
+                  >
+                    <RotateCcw className="w-4 h-4" />
+                  </Button>
+                )}
                 <Button
-                  variant="secondary"
+                  variant="destructive"
                   size="icon"
-                  className="absolute top-2 left-2 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
-                  onClick={() => handleDownload(image)}
+                  className="h-8 w-8"
+                  onClick={() => onRemove(image.id)}
                 >
-                  <Download className="w-4 h-4" />
+                  <X className="w-4 h-4" />
                 </Button>
-              )}
+              </div>
 
-              {/* Retry Button (when error) */}
-              {image.status === "error" && (
-                <Button
-                  variant="secondary"
-                  size="icon"
-                  className="absolute top-2 left-2 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
-                  onClick={() => onRetry(image.id)}
-                >
-                  <RotateCcw className="w-4 h-4" />
-                </Button>
+              {/* Status Indicator */}
+              <div className="absolute top-2 left-2">
+                {getStatusIcon(image.status)}
+              </div>
+
+              {/* Format Badge */}
+              {image.status === "done" && image.outputFormat && (
+                <div className="absolute top-2 right-2">
+                  <Badge variant="secondary" className="bg-green-500/20 text-green-400 uppercase text-[10px] px-1.5 py-0.5">
+                    {image.outputFormat}
+                  </Badge>
+                </div>
               )}
             </div>
 
             {/* Info */}
-            <div className="p-3 space-y-2">
-              <div className="flex items-start justify-between gap-2">
-                <p className="text-sm font-medium truncate flex-1" title={image.name}>
-                  {image.name}
-                </p>
-                {getStatusIcon(image.status)}
-              </div>
-
-              <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span>{formatFileSize(image.size)}</span>
-                {image.status === "done" && image.convertedSize && (
-                  <span className="flex items-center gap-1">
-                    →{" "}
-                    <span
-                      className={cn(
-                        image.convertedSize < image.size
-                          ? "text-green-500"
-                          : "text-yellow-500"
-                      )}
-                    >
-                      {formatFileSize(image.convertedSize)}
-                    </span>
-                    {image.convertedSize < image.size && (
-                      <span className="text-green-500">
-                        (-{Math.round((1 - image.convertedSize / image.size) * 100)}%)
-                      </span>
+            <div className="px-1 py-2 space-y-1">
+              <p className="text-xs font-medium truncate" title={image.name}>
+                {image.name}
+              </p>
+              {image.status === "done" && image.convertedSize && (
+                <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                  <span>{formatFileSize(image.size)}</span>
+                  <span>→</span>
+                  <span
+                    className={cn(
+                      image.convertedSize < image.size
+                        ? "text-green-500 font-medium"
+                        : "text-muted-foreground"
                     )}
+                  >
+                    {formatFileSize(image.convertedSize)}
                   </span>
-                )}
-              </div>
-
-              <div className="flex items-center gap-2">
-                {getStatusBadge(image.status)}
-                {image.status === "done" && image.outputFormat && (
-                  <Badge variant="secondary" className="bg-green-500/20 text-green-400 uppercase text-[10px]">
-                    {image.outputFormat}
-                  </Badge>
-                )}
-              </div>
+                  {image.convertedSize < image.size && (
+                    <span className="text-green-500">
+                      ({Math.round((1 - image.convertedSize / image.size) * 100)}%)
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
-          </Card>
+          </div>
         ))}
       </div>
     </div>

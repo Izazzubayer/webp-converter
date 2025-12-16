@@ -3,10 +3,10 @@
 import { useState, useCallback } from "react";
 import { ImageUploader } from "@/components/image-uploader";
 import { ImagePreviewGrid } from "@/components/image-preview-grid";
-import { ConversionSettings } from "@/components/conversion-settings";
+import { ConversionToolbar } from "@/components/conversion-toolbar";
 import { Header } from "@/components/header";
 import { toast } from "sonner";
-import { convertImage, getFileExtension } from "@/lib/image-converter";
+import { convertImage } from "@/lib/image-converter";
 import { downloadAsZip } from "@/lib/zip-download";
 
 export interface ImageFile {
@@ -117,16 +117,10 @@ export default function Home() {
     let successCount = 0;
     let errorCount = 0;
 
-    // Convert images sequentially to avoid overwhelming the browser
     for (const image of pendingImages) {
       try {
-        // Update status to converting
         updateImageStatus(image.id, { status: "converting" });
-
-        // Perform conversion using Sharp via API
         const result = await convertImage(image.file, options);
-
-        // Update with converted data
         updateImageStatus(image.id, {
           status: "done",
           convertedBlob: result.blob,
@@ -134,13 +128,10 @@ export default function Home() {
           convertedUrl: result.url,
           outputFormat: options.format,
         });
-
         successCount++;
       } catch (error) {
         console.error(`Failed to convert ${image.name}:`, error);
-        updateImageStatus(image.id, {
-          status: "error",
-        });
+        updateImageStatus(image.id, { status: "error" });
         errorCount++;
         toast.error(`Failed to convert ${image.name}`);
       }
@@ -148,7 +139,6 @@ export default function Home() {
 
     setIsConverting(false);
 
-    // Show summary toast
     if (successCount > 0) {
       toast.success(
         `Successfully converted ${successCount} image${successCount > 1 ? "s" : ""}`
@@ -179,7 +169,7 @@ export default function Home() {
     } finally {
       setIsDownloading(false);
     }
-  }, [images]);
+  }, [images, options.format]);
 
   const handleRetry = useCallback(
     async (id: string) => {
@@ -210,77 +200,76 @@ export default function Home() {
     <div className="min-h-screen flex flex-col">
       <Header />
       
-      <main className="flex-1 container mx-auto px-4 py-8 max-w-6xl">
-        <div className="space-y-8">
-          {/* Hero Section */}
-          <section className="text-center space-y-4 py-8">
+      <main className="flex-1 container mx-auto px-4 py-6 max-w-7xl">
+        {/* Hero - Only show when no images */}
+        {images.length === 0 && (
+          <section className="text-center space-y-4 py-8 mb-8">
             <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
               Image <span className="text-primary">Converter</span>
             </h1>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              High-quality image conversion powered by Sharp (libvips).
-              WebP, AVIF, PNG, JPEG — fast and efficient.
+              High-quality conversion powered by Sharp. WebP, AVIF, PNG, JPEG.
             </p>
           </section>
+        )}
 
-          {/* Upload Area */}
-          <ImageUploader onFilesAdded={handleFilesAdded} />
-
-          {/* Settings & Preview */}
-          {images.length > 0 && (
-            <div className="grid gap-8 lg:grid-cols-[300px_1fr]">
-              <aside>
-                <ConversionSettings
-                  options={options}
-                  onOptionsChange={setOptions}
-                  images={images}
-                  onConvert={handleConvert}
-                  onDownloadZip={handleDownloadZip}
-                  onClearAll={handleClearAll}
-                  isConverting={isConverting}
-                  isDownloading={isDownloading}
-                />
-              </aside>
-              
-              <section>
-                <ImagePreviewGrid
-                  images={images}
-                  onRemove={handleRemoveImage}
-                  onRetry={handleRetry}
-                />
-              </section>
-            </div>
-          )}
-
-          {/* Empty State Info */}
-          {images.length === 0 && (
-            <section className="text-center py-8 space-y-6">
-              <div className="grid md:grid-cols-3 gap-6 max-w-3xl mx-auto">
-                <div className="p-6 rounded-lg bg-card border border-border">
-                  <div className="text-3xl mb-3">🔧</div>
-                  <h3 className="font-semibold mb-2">Sharp Powered</h3>
-                  <p className="text-sm text-muted-foreground">
-                    High-quality libvips processing
-                  </p>
-                </div>
-                <div className="p-6 rounded-lg bg-card border border-border">
-                  <div className="text-3xl mb-3">⚡</div>
-                  <h3 className="font-semibold mb-2">Multi-Format</h3>
-                  <p className="text-sm text-muted-foreground">
-                    WebP, AVIF, PNG, JPEG output
-                  </p>
-                </div>
-                <div className="p-6 rounded-lg bg-card border border-border">
-                  <div className="text-3xl mb-3">📦</div>
-                  <h3 className="font-semibold mb-2">Batch Convert</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Convert multiple images at once
-                  </p>
-                </div>
-              </div>
-            </section>
-          )}
+        {/* Upload Area - Compact when images exist */}
+        <div className={images.length > 0 ? "mb-6" : "mb-8"}>
+          <ImageUploader onFilesAdded={handleFilesAdded} compact={images.length > 0} />
         </div>
+
+        {/* Toolbar & Images - Only show when images exist */}
+        {images.length > 0 && (
+          <div className="space-y-6">
+            {/* Compact Toolbar */}
+            <ConversionToolbar
+              options={options}
+              onOptionsChange={setOptions}
+              images={images}
+              onConvert={handleConvert}
+              onDownloadZip={handleDownloadZip}
+              onClearAll={handleClearAll}
+              isConverting={isConverting}
+              isDownloading={isDownloading}
+            />
+
+            {/* Image Grid */}
+            <ImagePreviewGrid
+              images={images}
+              onRemove={handleRemoveImage}
+              onRetry={handleRetry}
+            />
+          </div>
+        )}
+
+        {/* Empty State Info */}
+        {images.length === 0 && (
+          <section className="text-center py-8 space-y-6">
+            <div className="grid md:grid-cols-3 gap-6 max-w-3xl mx-auto">
+              <div className="p-6 rounded-lg bg-card border border-border">
+                <div className="text-3xl mb-3">🔧</div>
+                <h3 className="font-semibold mb-2">Sharp Powered</h3>
+                <p className="text-sm text-muted-foreground">
+                  High-quality libvips processing
+                </p>
+              </div>
+              <div className="p-6 rounded-lg bg-card border border-border">
+                <div className="text-3xl mb-3">⚡</div>
+                <h3 className="font-semibold mb-2">Multi-Format</h3>
+                <p className="text-sm text-muted-foreground">
+                  WebP, AVIF, PNG, JPEG output
+                </p>
+              </div>
+              <div className="p-6 rounded-lg bg-card border border-border">
+                <div className="text-3xl mb-3">📦</div>
+                <h3 className="font-semibold mb-2">Batch Convert</h3>
+                <p className="text-sm text-muted-foreground">
+                  Convert multiple images at once
+                </p>
+              </div>
+            </div>
+          </section>
+        )}
       </main>
 
       <footer className="border-t border-border py-6 mt-auto">
