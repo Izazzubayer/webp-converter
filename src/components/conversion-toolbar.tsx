@@ -175,7 +175,7 @@ export function ConversionToolbar({
             </span>
           </div>
           <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-            <Zap className="w-3 h-3 text-primary" />
+            
             Processing {Math.min(6, conversionProgress.total - conversionProgress.completed)} images in parallel...
           </p>
         </div>
