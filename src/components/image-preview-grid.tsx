@@ -15,7 +15,7 @@ interface ImagePreviewGridProps {
   onRemove: (id: string) => void;
   onRetry: (id: string) => Promise<void>;
   onClearAll: () => void;
-  lastConversionTime?: number; // Time in seconds
+  lastConversionTime?: number;
 }
 
 const FORMAT_EXTENSIONS: Record<OutputFormat, string> = {
@@ -56,6 +56,7 @@ export function ImagePreviewGrid({
   };
 
   const convertedCount = images.filter((img) => img.status === "done").length;
+  const showTime = lastConversionTime !== undefined && lastConversionTime > 0 && convertedCount > 0;
 
   return (
     <div className="space-y-3">
@@ -66,22 +67,11 @@ export function ImagePreviewGrid({
         onDownload={handleDownload}
       />
       <div className="flex items-center justify-between text-sm text-muted-foreground">
-        <div className="flex items-center gap-3">
-          <span>
-            {images.length} image{images.length !== 1 ? "s" : ""}
-            {convertedCount > 0 && (
-              <span className="ml-2 text-green-500">
-                • {convertedCount} converted
-              </span>
-            )}
-          </span>
-          {lastConversionTime !== undefined && lastConversionTime > 0 && convertedCount > 0 && (
-            <span className="flex items-center gap-1 text-primary">
-              
-              • {lastConversionTime.toFixed(1)}s
-            </span>
-          )}
-        </div>
+        <span>
+          {images.length} image{images.length !== 1 ? "s" : ""}
+          {convertedCount > 0 && ` • ${convertedCount} converted`}
+          {showTime && ` • ${lastConversionTime.toFixed(1)}s`}
+        </span>
         <Button
           variant="ghost"
           size="sm"
