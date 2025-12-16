@@ -1,65 +1,190 @@
-import Image from "next/image";
+"use client";
+
+import { useState, useCallback } from "react";
+import { ImageUploader } from "@/components/image-uploader";
+import { ImagePreviewGrid } from "@/components/image-preview-grid";
+import { ConversionSettings } from "@/components/conversion-settings";
+import { Header } from "@/components/header";
+import { toast } from "sonner";
+
+export interface ImageFile {
+  id: string;
+  file: File;
+  preview: string;
+  name: string;
+  size: number;
+  status: "pending" | "converting" | "done" | "error";
+  convertedBlob?: Blob;
+  convertedSize?: number;
+  convertedUrl?: string;
+}
+
+export interface ConversionOptions {
+  quality: number;
+  maxWidth: number;
+  maxHeight: number;
+  maintainAspectRatio: boolean;
+}
+
+const defaultOptions: ConversionOptions = {
+  quality: 80,
+  maxWidth: 1920,
+  maxHeight: 1080,
+  maintainAspectRatio: true,
+};
 
 export default function Home() {
+  const [images, setImages] = useState<ImageFile[]>([]);
+  const [options, setOptions] = useState<ConversionOptions>(defaultOptions);
+  const [isConverting, setIsConverting] = useState(false);
+
+  const handleFilesAdded = useCallback((files: File[]) => {
+    const validTypes = ["image/jpeg", "image/png", "image/gif", "image/webp", "image/bmp", "image/tiff"];
+    
+    const newImages: ImageFile[] = files
+      .filter((file) => {
+        if (!validTypes.includes(file.type)) {
+          toast.error(`${file.name} is not a supported image format`);
+          return false;
+        }
+        return true;
+      })
+      .map((file) => ({
+        id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        file,
+        preview: URL.createObjectURL(file),
+        name: file.name,
+        size: file.size,
+        status: "pending" as const,
+      }));
+
+    if (newImages.length > 0) {
+      setImages((prev) => [...prev, ...newImages]);
+      toast.success(`${newImages.length} image${newImages.length > 1 ? "s" : ""} added`);
+    }
+  }, []);
+
+  const handleRemoveImage = useCallback((id: string) => {
+    setImages((prev) => {
+      const image = prev.find((img) => img.id === id);
+      if (image) {
+        URL.revokeObjectURL(image.preview);
+        if (image.convertedUrl) {
+          URL.revokeObjectURL(image.convertedUrl);
+        }
+      }
+      return prev.filter((img) => img.id !== id);
+    });
+  }, []);
+
+  const handleClearAll = useCallback(() => {
+    images.forEach((img) => {
+      URL.revokeObjectURL(img.preview);
+      if (img.convertedUrl) {
+        URL.revokeObjectURL(img.convertedUrl);
+      }
+    });
+    setImages([]);
+    toast.info("All images cleared");
+  }, [images]);
+
+  const updateImageStatus = useCallback(
+    (id: string, updates: Partial<ImageFile>) => {
+      setImages((prev) =>
+        prev.map((img) => (img.id === id ? { ...img, ...updates } : img))
+      );
+    },
+    []
+  );
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <div className="min-h-screen flex flex-col">
+      <Header />
+      
+      <main className="flex-1 container mx-auto px-4 py-8 max-w-6xl">
+        <div className="space-y-8">
+          {/* Hero Section */}
+          <section className="text-center space-y-4 py-8">
+            <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
+              Convert to <span className="text-primary">WebP</span>
+            </h1>
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+              Fast, private image conversion. Everything happens in your browser.
+              No uploads, no servers, no tracking.
+            </p>
+          </section>
+
+          {/* Upload Area */}
+          <ImageUploader onFilesAdded={handleFilesAdded} />
+
+          {/* Settings & Preview */}
+          {images.length > 0 && (
+            <div className="grid gap-8 lg:grid-cols-[300px_1fr]">
+              <aside>
+                <ConversionSettings
+                  options={options}
+                  onOptionsChange={setOptions}
+                  images={images}
+                  onConvert={async () => {
+                    // Conversion logic will be added in Segment 4
+                    setIsConverting(true);
+                    toast.info("Conversion coming in next segment!");
+                    setIsConverting(false);
+                  }}
+                  onClearAll={handleClearAll}
+                  isConverting={isConverting}
+                />
+              </aside>
+              
+              <section>
+                <ImagePreviewGrid
+                  images={images}
+                  onRemove={handleRemoveImage}
+                />
+              </section>
+            </div>
+          )}
+
+          {/* Empty State Info */}
+          {images.length === 0 && (
+            <section className="text-center py-8 space-y-6">
+              <div className="grid md:grid-cols-3 gap-6 max-w-3xl mx-auto">
+                <div className="p-6 rounded-lg bg-card border border-border">
+                  <div className="text-3xl mb-3">🔒</div>
+                  <h3 className="font-semibold mb-2">100% Private</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Your images never leave your device
+                  </p>
+                </div>
+                <div className="p-6 rounded-lg bg-card border border-border">
+                  <div className="text-3xl mb-3">⚡</div>
+                  <h3 className="font-semibold mb-2">Lightning Fast</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Client-side processing for instant results
+                  </p>
+                </div>
+                <div className="p-6 rounded-lg bg-card border border-border">
+                  <div className="text-3xl mb-3">📦</div>
+                  <h3 className="font-semibold mb-2">Batch Convert</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Convert multiple images at once
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+              </div>
+            </section>
+          )}
         </div>
       </main>
+
+      <footer className="border-t border-border py-6 mt-auto">
+        <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
+          <p>
+            Built for web developers who need optimized images.
+            <span className="mx-2">•</span>
+            No data stored, ever.
+          </p>
+        </div>
+      </footer>
     </div>
   );
 }
