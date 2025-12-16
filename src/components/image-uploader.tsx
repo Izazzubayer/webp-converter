@@ -94,7 +94,7 @@ export function ImageUploader({ onFilesAdded, compact = false }: ImageUploaderPr
           : "border-border",
         compact 
           ? "p-4 max-w-full" 
-          : "p-10 max-w-2xl mx-auto"
+          : "p-6 max-w-2xl mx-auto"
       )}
     >
       <input
@@ -117,13 +117,13 @@ export function ImageUploader({ onFilesAdded, compact = false }: ImageUploaderPr
             isDragging 
               ? "bg-primary/20 scale-110" 
               : "bg-muted hover:bg-muted/80",
-            compact ? "p-2.5" : "p-5"
+            compact ? "p-2.5" : "p-3"
           )}
         >
           {isDragging ? (
-            <ImagePlus className={cn("text-primary transition-transform", compact ? "w-5 h-5" : "w-10 h-10")} />
+            <ImagePlus className={cn("text-primary transition-transform", compact ? "w-5 h-5" : "w-8 h-8")} />
           ) : (
-            <Upload className={cn("text-muted-foreground transition-colors hover:text-primary", compact ? "w-5 h-5" : "w-10 h-10")} />
+            <Upload className={cn("text-muted-foreground transition-colors hover:text-primary", compact ? "w-5 h-5" : "w-8 h-8")} />
           )}
         </div>
 
@@ -131,7 +131,7 @@ export function ImageUploader({ onFilesAdded, compact = false }: ImageUploaderPr
           <p className={cn(
             "font-semibold transition-colors",
             isDragging && "text-primary",
-            compact ? "text-sm" : "text-xl"
+            compact ? "text-sm" : "text-base"
           )}>
             {isDragging ? "Drop images here" : compact ? "Add more images" : "Drag & drop images here"}
           </p>

@@ -16,7 +16,7 @@ const ibmPlexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AI Image Converter | WebP, AVIF, PNG, JPEG",
+  title: "WebP Converter | WebP, AVIF, PNG, JPEG",
   description:
     "High-quality image conversion powered by Sharp. Convert to WebP, AVIF, PNG, JPEG with quality control and resizing. Fast and efficient.",
   keywords: [
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
     apple: "/ri_brush-ai-fill.png",
   },
   openGraph: {
-    title: "AI Image Converter | WebP, AVIF, PNG, JPEG",
+    title: "WebP Converter | WebP, AVIF, PNG, JPEG",
     description:
       "High-quality image conversion powered by Sharp. Convert to WebP, AVIF, PNG, JPEG with quality control and resizing. Fast and efficient.",
     images: [
@@ -41,14 +41,14 @@ export const metadata: Metadata = {
         url: "/ri_brush-ai-fill.png",
         width: 1200,
         height: 630,
-        alt: "AI Image Converter Logo",
+        alt: "WebP Converter Logo",
       },
     ],
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "AI Image Converter | WebP, AVIF, PNG, JPEG",
+    title: "WebP Converter | WebP, AVIF, PNG, JPEG",
     description:
       "High-quality image conversion powered by Sharp. Convert to WebP, AVIF, PNG, JPEG with quality control and resizing. Fast and efficient.",
     images: ["/ri_brush-ai-fill.png"],

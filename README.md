@@ -1,8 +1,8 @@
-# AI Image Converter
+# WebP Converter
 
 A high-performance, client-side image conversion tool built with Next.js and Sharp. Convert images to WebP, AVIF, PNG, or JPEG with quality control and resizing options.
 
-![AI Image Converter](https://img.shields.io/badge/Next.js-16.0-black?style=flat-square&logo=next.js)
+![WebP Converter](https://img.shields.io/badge/Next.js-16.0-black?style=flat-square&logo=next.js)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=flat-square&logo=typescript)
 ![Sharp](https://img.shields.io/badge/Sharp-0.34-green?style=flat-square)
 

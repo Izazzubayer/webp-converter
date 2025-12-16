@@ -24,9 +24,9 @@ export function Header() {
         <div className="flex items-center gap-3">
           <button
             onClick={handleHomeClick}
-            className="font-semibold text-lg tracking-tight hover:opacity-80 transition-opacity cursor-pointer"
+            className="font-mono font-semibold text-lg tracking-tight hover:opacity-80 transition-opacity cursor-pointer"
           >
-            AI Image Converter
+WebP Converter
           </button>
         </div>
 

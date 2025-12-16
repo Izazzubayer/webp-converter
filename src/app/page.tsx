@@ -270,21 +270,21 @@ export default function Home() {
     <div className="min-h-screen flex flex-col">
       <Header />
       
-      <main className="flex-1 container mx-auto px-4 py-6 max-w-7xl">
+      <main className="flex-1 container mx-auto px-4 py-3 max-w-7xl flex flex-col justify-center">
         {/* Hero - Only show when no images */}
         {images.length === 0 && (
-          <section className="text-center space-y-4 py-8 mb-8">
-            <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-              AI Image <span className="text-primary">Converter</span>
+          <section className="text-center space-y-2 py-3 mb-3">
+            <h1 className="font-mono text-3xl md:text-4xl font-bold tracking-tight">
+              <span className="text-primary">WebP</span> Converter
             </h1>
-            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+            <p className="text-muted-foreground text-sm max-w-2xl mx-auto">
               Built for web devs who need optimized images. No data stored, ever.
             </p>
           </section>
         )}
 
         {/* Upload Area - Compact when images exist */}
-        <div className={images.length > 0 ? "mb-6" : "mb-8"}>
+        <div className={images.length > 0 ? "mb-4" : "mb-4"}>
           <ImageUploader onFilesAdded={handleFilesAdded} compact={images.length > 0} />
         </div>
 
@@ -316,32 +316,32 @@ export default function Home() {
 
         {/* Empty State Info */}
         {images.length === 0 && (
-          <section className="text-center py-8 space-y-6">
-            <div className="grid md:grid-cols-3 gap-6 max-w-3xl mx-auto">
-              <div className="p-6 rounded-lg bg-card border border-border">
-                <div className="mb-3 flex justify-center">
-                  <Settings className="w-8 h-8 text-primary" />
+          <section className="text-center py-3 space-y-3">
+            <div className="grid md:grid-cols-3 gap-3 max-w-3xl mx-auto">
+              <div className="p-4 rounded-lg bg-card border border-border">
+                <div className="mb-2 flex justify-center">
+                  <Settings className="w-6 h-6 text-primary" />
                 </div>
-                <h3 className="font-semibold mb-2">Sharp Powered</h3>
-                <p className="text-sm text-muted-foreground">
+                <h3 className="font-mono font-semibold text-sm mb-1">Sharp Powered</h3>
+                <p className="text-xs text-muted-foreground">
                   High-quality libvips processing
                 </p>
               </div>
-              <div className="p-6 rounded-lg bg-card border border-border">
-                <div className="mb-3 flex justify-center">
-                  <Zap className="w-8 h-8 text-primary" />
+              <div className="p-4 rounded-lg bg-card border border-border">
+                <div className="mb-2 flex justify-center">
+                  <Zap className="w-6 h-6 text-primary" />
                 </div>
-                <h3 className="font-semibold mb-2">Multi-Format</h3>
-                <p className="text-sm text-muted-foreground">
+                <h3 className="font-mono font-semibold text-sm mb-1">Multi-Format</h3>
+                <p className="text-xs text-muted-foreground">
                   WebP, AVIF, PNG, JPEG output
                 </p>
               </div>
-              <div className="p-6 rounded-lg bg-card border border-border">
-                <div className="mb-3 flex justify-center">
-                  <Package className="w-8 h-8 text-primary" />
+              <div className="p-4 rounded-lg bg-card border border-border">
+                <div className="mb-2 flex justify-center">
+                  <Package className="w-6 h-6 text-primary" />
                 </div>
-                <h3 className="font-semibold mb-2">Batch Convert</h3>
-                <p className="text-sm text-muted-foreground">
+                <h3 className="font-mono font-semibold text-sm mb-1">Batch Convert</h3>
+                <p className="text-xs text-muted-foreground">
                   Convert multiple images at once
                 </p>
               </div>
@@ -350,7 +350,7 @@ export default function Home() {
         )}
       </main>
 
-      <footer className="border-t border-border py-6 mt-auto">
+      <footer className="border-t border-border py-3 mt-auto">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
           <p className="flex items-center justify-center gap-1.5">
             Made with{" "}
