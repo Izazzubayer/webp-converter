@@ -2,19 +2,19 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { X, Check, Loader2, AlertCircle, Download, RotateCcw } from "lucide-react";
+import { X, Loader2, Download, RotateCcw, Eye, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
 import { ImageViewer } from "@/components/image-viewer";
-import type { ImageFile, OutputFormat } from "@/app/page";
+import { isConversionStale } from "@/app/page";
+import type { ImageFile, OutputFormat, ConversionOptions } from "@/app/page";
 
 interface ImagePreviewGridProps {
   images: ImageFile[];
-  selectedIds: Set<string>;
-  onToggleSelect: (id: string) => void;
+  options: ConversionOptions;
   onRemove: (id: string) => void;
   onRetry: (id: string) => Promise<void>;
+  onClearAll: () => void;
 }
 
 const FORMAT_EXTENSIONS: Record<OutputFormat, string> = {
@@ -24,52 +24,8 @@ const FORMAT_EXTENSIONS: Record<OutputFormat, string> = {
   jpeg: ".jpg",
 };
 
-function formatFileSize(bytes: number): string {
-  if (bytes === 0) return "0 B";
-  const k = 1024;
-  const sizes = ["B", "KB", "MB", "GB"];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
-}
-
-function getStatusIcon(status: ImageFile["status"]) {
-  switch (status) {
-    case "converting":
-      return <Loader2 className="w-4 h-4 animate-spin" />;
-    case "done":
-      return <Check className="w-4 h-4 text-green-500" />;
-    case "error":
-      return <AlertCircle className="w-4 h-4 text-red-500" />;
-    default:
-      return null;
-  }
-}
-
-function getStatusBadge(status: ImageFile["status"]) {
-  switch (status) {
-    case "pending":
-      return <Badge variant="secondary">Pending</Badge>;
-    case "converting":
-      return (
-        <Badge variant="secondary" className="bg-blue-500/20 text-blue-400">
-          Converting...
-        </Badge>
-      );
-    case "done":
-      return null; // Format badge shown separately
-    case "error":
-      return (
-        <Badge variant="secondary" className="bg-red-500/20 text-red-400">
-          Error
-        </Badge>
-      );
-    default:
-      return null;
-  }
-}
-
-export function ImagePreviewGrid({ images, selectedIds, onToggleSelect, onRemove, onRetry }: ImagePreviewGridProps) {
-  const [viewerIndex, setViewerIndex] = useState<number | null>(null);
+export function ImagePreviewGrid({ images, options, onRemove, onRetry, onClearAll }: ImagePreviewGridProps) {
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 
   const handleDownload = (image: ImageFile) => {
     if (!image.convertedUrl || !image.convertedBlob) return;
@@ -84,18 +40,18 @@ export function ImagePreviewGrid({ images, selectedIds, onToggleSelect, onRemove
   };
 
   const handleImageClick = (index: number) => {
-    setViewerIndex(index);
+    setSelectedIndex(index);
   };
 
   const handleCloseViewer = () => {
-    setViewerIndex(null);
+    setSelectedIndex(null);
   };
 
   return (
     <div className="space-y-3">
       <ImageViewer
         images={images}
-        currentIndex={viewerIndex}
+        currentIndex={selectedIndex}
         onClose={handleCloseViewer}
         onDownload={handleDownload}
       />
@@ -103,49 +59,33 @@ export function ImagePreviewGrid({ images, selectedIds, onToggleSelect, onRemove
         <span>
           {images.length} image{images.length !== 1 ? "s" : ""}
           {images.filter((img) => img.status === "done").length > 0 && (
-            <span className="ml-2">
+            <span className="ml-2 text-green-500">
               • {images.filter((img) => img.status === "done").length} converted
             </span>
           )}
         </span>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onClearAll}
+          className="text-destructive hover:text-destructive h-7 px-2"
+        >
+          <Trash2 className="w-4 h-4 mr-1" />
+          Clear All
+        </Button>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
-        {images.map((image, index) => {
-          const isSelected = selectedIds.has(image.id);
-          return (
+        {images.map((image) => (
+          <div
+            key={image.id}
+            className="group"
+          >
+            {/* Image Preview */}
             <div
-              key={image.id}
-              className={cn(
-                "group relative",
-                isSelected && "ring-2 ring-primary ring-offset-2 rounded"
-              )}
+              className="relative aspect-square bg-muted rounded overflow-hidden cursor-pointer"
+              onClick={() => handleImageClick(images.indexOf(image))}
             >
-              {/* Selection Checkbox */}
-              <div
-                className="absolute top-2 left-2 z-10"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onToggleSelect(image.id);
-                }}
-              >
-                <div
-                  className={cn(
-                    "h-5 w-5 rounded border-2 flex items-center justify-center cursor-pointer transition-all",
-                    isSelected
-                      ? "bg-primary border-primary"
-                      : "bg-background/80 border-white/50 backdrop-blur-sm opacity-0 group-hover:opacity-100"
-                  )}
-                >
-                  {isSelected && <Check className="w-3 h-3 text-primary-foreground" />}
-                </div>
-              </div>
-
-              {/* Image Preview */}
-              <div
-                className="relative aspect-square bg-muted rounded overflow-hidden cursor-pointer"
-                onClick={() => handleImageClick(index)}
-              >
               <Image
                 src={image.convertedUrl || image.preview}
                 alt={image.name}
@@ -166,12 +106,22 @@ export function ImagePreviewGrid({ images, selectedIds, onToggleSelect, onRemove
                 className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 flex items-center justify-center gap-2"
                 onClick={(e) => e.stopPropagation()}
               >
+                <Button
+                  variant="secondary"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => handleImageClick(images.indexOf(image))}
+                  title="View"
+                >
+                  <Eye className="w-4 h-4" />
+                </Button>
                 {image.status === "done" && (
                   <Button
                     variant="secondary"
                     size="icon"
                     className="h-8 w-8"
                     onClick={() => handleDownload(image)}
+                    title="Download"
                   >
                     <Download className="w-4 h-4" />
                   </Button>
@@ -182,6 +132,7 @@ export function ImagePreviewGrid({ images, selectedIds, onToggleSelect, onRemove
                     size="icon"
                     className="h-8 w-8"
                     onClick={() => onRetry(image.id)}
+                    title="Retry"
                   >
                     <RotateCcw className="w-4 h-4" />
                   </Button>
@@ -191,55 +142,29 @@ export function ImagePreviewGrid({ images, selectedIds, onToggleSelect, onRemove
                   size="icon"
                   className="h-8 w-8"
                   onClick={() => onRemove(image.id)}
+                  title="Remove"
                 >
                   <X className="w-4 h-4" />
                 </Button>
               </div>
 
-              {/* Status Indicator */}
-              <div className="absolute top-2 left-2">
-                {getStatusIcon(image.status)}
-              </div>
-
-              {/* Format Badge */}
+              {/* Format Badge - shows stale indicator if settings changed */}
               {image.status === "done" && image.outputFormat && (
-                <div className="absolute top-2 right-2">
-                  <Badge variant="secondary" className="bg-green-500/20 text-green-400 uppercase text-[10px] px-1.5 py-0.5">
-                    {image.outputFormat}
-                  </Badge>
-                </div>
-              )}
-            </div>
-
-            {/* Info */}
-            <div className="px-1 py-2 space-y-1">
-              <p className="text-xs font-medium truncate" title={image.name}>
-                {image.name}
-              </p>
-              {image.status === "done" && image.convertedSize && (
-                <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
-                  <span>{formatFileSize(image.size)}</span>
-                  <span>→</span>
-                  <span
-                    className={cn(
-                      image.convertedSize < image.size
-                        ? "text-green-500 font-medium"
-                        : "text-muted-foreground"
-                    )}
-                  >
-                    {formatFileSize(image.convertedSize)}
-                  </span>
-                  {image.convertedSize < image.size && (
-                    <span className="text-green-500">
-                      ({Math.round((1 - image.convertedSize / image.size) * 100)}%)
-                    </span>
+                <div className="absolute top-2 right-2 flex gap-1">
+                  {isConversionStale(image, options) ? (
+                    <Badge variant="secondary" className="bg-yellow-500/20 text-yellow-400 text-[10px] px-1.5 py-0.5">
+                      Outdated
+                    </Badge>
+                  ) : (
+                    <Badge variant="secondary" className="bg-green-500 text-white uppercase text-[10px] px-1.5 py-0.5 font-semibold">
+                      {image.outputFormat}
+                    </Badge>
                   )}
                 </div>
               )}
             </div>
           </div>
-        );
-        })}
+        ))}
       </div>
     </div>
   );

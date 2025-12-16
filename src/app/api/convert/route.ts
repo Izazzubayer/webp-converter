@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Return the converted image
-    return new NextResponse(outputBuffer, {
+    return new NextResponse(new Uint8Array(outputBuffer), {
       headers: {
         "Content-Type": MIME_TYPES[options.format],
         "Content-Length": outputBuffer.length.toString(),

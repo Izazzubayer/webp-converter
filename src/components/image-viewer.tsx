@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useCallback } from "react";
 import Image from "next/image";
 import { X, Download, ChevronLeft, ChevronRight, Check } from "lucide-react";
 import {
@@ -8,14 +8,7 @@ import {
   DialogContent,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import type { ImageFile, OutputFormat } from "@/app/page";
-
-const FORMAT_EXTENSIONS: Record<OutputFormat, string> = {
-  webp: ".webp",
-  avif: ".avif",
-  png: ".png",
-  jpeg: ".jpg",
-};
+import type { ImageFile } from "@/app/page";
 
 interface ImageViewerProps {
   images: ImageFile[];
@@ -30,26 +23,30 @@ export function ImageViewer({
   onClose,
   onDownload,
 }: ImageViewerProps) {
-  const [index, setIndex] = useState(currentIndex ?? 0);
-
-  useEffect(() => {
-    if (currentIndex !== null) {
-      setIndex(currentIndex);
+  // Use offset from currentIndex for navigation within viewer
+  const [offset, setOffset] = useState(0);
+  
+  // Reset offset when dialog opens with new index
+  const handleOpenChange = useCallback((open: boolean) => {
+    if (!open) {
+      onClose();
+      setOffset(0);
     }
-  }, [currentIndex]);
+  }, [onClose]);
 
   if (currentIndex === null || images.length === 0) return null;
 
+  const index = currentIndex + offset;
   const currentImage = images[index];
   const hasNext = index < images.length - 1;
   const hasPrev = index > 0;
 
   const handleNext = () => {
-    if (hasNext) setIndex(index + 1);
+    if (hasNext) setOffset(offset + 1);
   };
 
   const handlePrev = () => {
-    if (hasPrev) setIndex(index - 1);
+    if (hasPrev) setOffset(offset - 1);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -65,10 +62,11 @@ export function ImageViewer({
   };
 
   return (
-    <Dialog open={currentIndex !== null} onOpenChange={onClose}>
+    <Dialog open={currentIndex !== null} onOpenChange={handleOpenChange}>
       <DialogContent
         className="max-w-[95vw] w-full h-[95vh] p-0 gap-0 bg-black/95 border-none"
         onKeyDown={handleKeyDown}
+        showCloseButton={false}
       >
         <div className="relative w-full h-full flex flex-col">
           {/* Minimal Top Bar */}
@@ -127,11 +125,8 @@ export function ImageViewer({
           {/* Clean Bottom Info Panel */}
           <div className="absolute bottom-0 left-0 right-0 z-20 bg-black/80 backdrop-blur-xl border-t border-white/10">
             <div className="px-6 py-5">
-              {/* File Name */}
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-white font-medium text-lg truncate max-w-2xl">
-                  {currentImage.name}
-                </h3>
+              {/* Header with Download */}
+              <div className="flex items-center justify-end mb-4">
                 {currentImage.status === "done" && onDownload && (
                   <Button
                     onClick={handleDownload}

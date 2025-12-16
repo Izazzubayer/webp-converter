@@ -20,6 +20,13 @@ export interface ImageFile {
   convertedSize?: number;
   convertedUrl?: string;
   outputFormat?: OutputFormat;
+  // Track settings used for conversion to detect stale conversions
+  convertedWithSettings?: {
+    quality: number;
+    maxWidth: number;
+    maxHeight: number;
+    format: OutputFormat;
+  };
 }
 
 export type OutputFormat = "webp" | "avif" | "png" | "jpeg";
@@ -40,12 +47,32 @@ const defaultOptions: ConversionOptions = {
   format: "webp",
 };
 
+// Helper to check if an image needs reconversion (settings changed)
+export function isConversionStale(image: ImageFile, currentOptions: ConversionOptions): boolean {
+  if (image.status !== "done" || !image.convertedWithSettings) return false;
+  
+  const { quality, maxWidth, maxHeight, format } = image.convertedWithSettings;
+  return (
+    quality !== currentOptions.quality ||
+    maxWidth !== currentOptions.maxWidth ||
+    maxHeight !== currentOptions.maxHeight ||
+    format !== currentOptions.format
+  );
+}
+
 export default function Home() {
   const [images, setImages] = useState<ImageFile[]>([]);
   const [options, setOptions] = useState<ConversionOptions>(defaultOptions);
   const [isConverting, setIsConverting] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  // Count images needing conversion (pending, error, or stale)
+  const needsConversionCount = images.filter(
+    (img) => 
+      img.status === "pending" || 
+      img.status === "error" || 
+      isConversionStale(img, options)
+  ).length;
 
   const handleFilesAdded = useCallback((files: File[]) => {
     const validTypes = ["image/jpeg", "image/png", "image/gif", "image/webp", "image/bmp", "image/tiff"];
@@ -94,86 +121,8 @@ export default function Home() {
       }
     });
     setImages([]);
-    setSelectedIds(new Set());
     toast.info("All images cleared");
   }, [images]);
-
-  const handleToggleSelect = useCallback((id: string) => {
-    setSelectedIds((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(id)) {
-        newSet.delete(id);
-      } else {
-        newSet.add(id);
-      }
-      return newSet;
-    });
-  }, []);
-
-  const handleSelectAll = useCallback(() => {
-    if (selectedIds.size === images.length) {
-      setSelectedIds(new Set());
-    } else {
-      setSelectedIds(new Set(images.map((img) => img.id)));
-    }
-  }, [images, selectedIds.size]);
-
-  const handleDeleteSelected = useCallback(() => {
-    if (selectedIds.size === 0) return;
-    
-    images.forEach((img) => {
-      if (selectedIds.has(img.id)) {
-        URL.revokeObjectURL(img.preview);
-        if (img.convertedUrl) {
-          URL.revokeObjectURL(img.convertedUrl);
-        }
-      }
-    });
-    
-    setImages((prev) => prev.filter((img) => !selectedIds.has(img.id)));
-    setSelectedIds(new Set());
-    toast.success(`Deleted ${selectedIds.size} image${selectedIds.size > 1 ? "s" : ""}`);
-  }, [images, selectedIds]);
-
-  const handleDownloadSelected = useCallback(async () => {
-    const selectedImages = images.filter(
-      (img) => selectedIds.has(img.id) && img.status === "done"
-    );
-
-    if (selectedImages.length === 0) {
-      toast.info("No converted images selected");
-      return;
-    }
-
-    if (selectedImages.length === 1) {
-      // Single download
-      const image = selectedImages[0];
-      if (image.convertedUrl && image.convertedBlob) {
-        const extension = image.outputFormat === "webp" ? ".webp" : 
-                         image.outputFormat === "avif" ? ".avif" :
-                         image.outputFormat === "png" ? ".png" : ".jpg";
-        const link = document.createElement("a");
-        link.href = image.convertedUrl;
-        link.download = image.name.replace(/\.[^/.]+$/, "") + extension;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        toast.success("Downloaded image");
-      }
-    } else {
-      // ZIP download
-      setIsDownloading(true);
-      try {
-        await downloadAsZip(selectedImages, options.format, `${options.format}-images`);
-        toast.success(`Downloaded ${selectedImages.length} images as ZIP`);
-      } catch (error) {
-        console.error("Failed to create ZIP:", error);
-        toast.error("Failed to create ZIP file");
-      } finally {
-        setIsDownloading(false);
-      }
-    }
-  }, [images, selectedIds, options.format]);
 
   const updateImageStatus = useCallback(
     (id: string, updates: Partial<ImageFile>) => {
@@ -185,9 +134,15 @@ export default function Home() {
   );
 
   const handleConvert = useCallback(async () => {
-    const pendingImages = images.filter((img) => img.status === "pending");
+    // Get images that need conversion: pending, error, or stale (settings changed)
+    const imagesToConvert = images.filter(
+      (img) =>
+        img.status === "pending" ||
+        img.status === "error" ||
+        isConversionStale(img, options)
+    );
     
-    if (pendingImages.length === 0) {
+    if (imagesToConvert.length === 0) {
       toast.info("No images to convert");
       return;
     }
@@ -196,9 +151,21 @@ export default function Home() {
     let successCount = 0;
     let errorCount = 0;
 
-    for (const image of pendingImages) {
+    for (const image of imagesToConvert) {
       try {
-        updateImageStatus(image.id, { status: "converting" });
+        // Revoke old converted URL if reconverting
+        if (image.convertedUrl) {
+          URL.revokeObjectURL(image.convertedUrl);
+        }
+        
+        updateImageStatus(image.id, { 
+          status: "converting",
+          // Clear old conversion data
+          convertedBlob: undefined,
+          convertedSize: undefined,
+          convertedUrl: undefined,
+        });
+        
         const result = await convertImage(image.file, options);
         updateImageStatus(image.id, {
           status: "done",
@@ -206,6 +173,12 @@ export default function Home() {
           convertedSize: result.size,
           convertedUrl: result.url,
           outputFormat: options.format,
+          convertedWithSettings: {
+            quality: options.quality,
+            maxWidth: options.maxWidth,
+            maxHeight: options.maxHeight,
+            format: options.format,
+          },
         });
         successCount++;
       } catch (error) {
@@ -256,7 +229,18 @@ export default function Home() {
       if (!image) return;
 
       try {
-        updateImageStatus(id, { status: "converting" });
+        // Revoke old converted URL if exists
+        if (image.convertedUrl) {
+          URL.revokeObjectURL(image.convertedUrl);
+        }
+        
+        updateImageStatus(id, { 
+          status: "converting",
+          convertedBlob: undefined,
+          convertedSize: undefined,
+          convertedUrl: undefined,
+        });
+        
         const result = await convertImage(image.file, options);
         updateImageStatus(id, {
           status: "done",
@@ -264,6 +248,12 @@ export default function Home() {
           convertedSize: result.size,
           convertedUrl: result.url,
           outputFormat: options.format,
+          convertedWithSettings: {
+            quality: options.quality,
+            maxWidth: options.maxWidth,
+            maxHeight: options.maxHeight,
+            format: options.format,
+          },
         });
         toast.success(`Successfully converted ${image.name}`);
       } catch (error) {
@@ -305,24 +295,20 @@ export default function Home() {
               options={options}
               onOptionsChange={setOptions}
               images={images}
-              selectedIds={selectedIds}
               onConvert={handleConvert}
               onDownloadZip={handleDownloadZip}
-              onClearAll={handleClearAll}
-              onSelectAll={handleSelectAll}
-              onDeleteSelected={handleDeleteSelected}
-              onDownloadSelected={handleDownloadSelected}
               isConverting={isConverting}
               isDownloading={isDownloading}
+              needsConversionCount={needsConversionCount}
             />
 
             {/* Image Grid */}
             <ImagePreviewGrid
               images={images}
-              selectedIds={selectedIds}
-              onToggleSelect={handleToggleSelect}
+              options={options}
               onRemove={handleRemoveImage}
               onRetry={handleRetry}
+              onClearAll={handleClearAll}
             />
           </div>
         )}

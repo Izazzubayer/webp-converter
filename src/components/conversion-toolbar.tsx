@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { Trash2, Download, Loader2, Archive, Settings2, X, CheckSquare, Square } from "lucide-react";
+import { Download, Loader2, Settings2, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
@@ -10,7 +9,6 @@ import { Separator } from "@/components/ui/separator";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
@@ -20,112 +18,30 @@ interface ConversionToolbarProps {
   options: ConversionOptions;
   onOptionsChange: (options: ConversionOptions) => void;
   images: ImageFile[];
-  selectedIds: Set<string>;
   onConvert: () => Promise<void>;
   onDownloadZip: () => Promise<void>;
-  onClearAll: () => void;
-  onSelectAll: () => void;
-  onDeleteSelected: () => void;
-  onDownloadSelected: () => void;
   isConverting: boolean;
   isDownloading: boolean;
+  needsConversionCount: number;
 }
 
 export function ConversionToolbar({
   options,
   onOptionsChange,
   images,
-  selectedIds,
   onConvert,
   onDownloadZip,
-  onClearAll,
-  onSelectAll,
-  onDeleteSelected,
-  onDownloadSelected,
   isConverting,
   isDownloading,
+  needsConversionCount,
 }: ConversionToolbarProps) {
-  const [showAdvanced, setShowAdvanced] = useState(false);
-  const pendingCount = images.filter((img) => img.status === "pending").length;
   const doneCount = images.filter((img) => img.status === "done").length;
-  const selectedCount = selectedIds.size;
-  const allSelected = selectedCount === images.length && images.length > 0;
-  const selectedConvertedCount = images.filter(
-    (img) => selectedIds.has(img.id) && img.status === "done"
-  ).length;
 
   return (
     <div className="space-y-4">
-      {/* Selection Bar (when items selected) */}
-      {selectedCount > 0 && (
-        <Card className="p-3 bg-primary/5 border-primary/20">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onSelectAll}
-                className="h-8"
-              >
-                {allSelected ? (
-                  <CheckSquare className="w-4 h-4 mr-2" />
-                ) : (
-                  <Square className="w-4 h-4 mr-2" />
-                )}
-                {allSelected ? "Deselect All" : "Select All"}
-              </Button>
-              <span className="text-sm font-medium">
-                {selectedCount} selected
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              {selectedConvertedCount > 0 && (
-                <Button
-                  variant="default"
-                  size="sm"
-                  onClick={onDownloadSelected}
-                  disabled={isDownloading}
-                >
-                  {isDownloading ? (
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  ) : (
-                    <Download className="w-4 h-4 mr-2" />
-                  )}
-                  Download ({selectedConvertedCount})
-                </Button>
-              )}
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={onDeleteSelected}
-              >
-                <Trash2 className="w-4 h-4 mr-2" />
-                Delete ({selectedCount})
-              </Button>
-            </div>
-          </div>
-        </Card>
-      )}
-
       {/* Main Toolbar */}
       <Card className="p-4">
         <div className="flex flex-wrap items-center gap-4">
-          {/* Select All Button */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onSelectAll}
-            className="h-8"
-          >
-            {allSelected ? (
-              <CheckSquare className="w-4 h-4" />
-            ) : (
-              <Square className="w-4 h-4" />
-            )}
-          </Button>
-
-          <Separator orientation="vertical" className="h-6" />
-
           {/* Format Selector */}
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground whitespace-nowrap">Format:</span>
@@ -171,7 +87,7 @@ export function ConversionToolbar({
             <Button
               size="sm"
               onClick={onConvert}
-              disabled={isConverting || pendingCount === 0}
+              disabled={isConverting || needsConversionCount === 0}
             >
               {isConverting ? (
                 <>
@@ -180,8 +96,8 @@ export function ConversionToolbar({
                 </>
               ) : (
                 <>
-                  <Download className="w-4 h-4 mr-2" />
-                  Convert {pendingCount > 0 && `(${pendingCount})`}
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Convert {needsConversionCount > 0 && `(${needsConversionCount})`}
                 </>
               )}
             </Button>
@@ -200,8 +116,8 @@ export function ConversionToolbar({
                   </>
                 ) : (
                   <>
-                    <Archive className="w-4 h-4 mr-2" />
-                    ZIP ({doneCount})
+                    <Download className="w-4 h-4 mr-2" />
+                    Download ({doneCount})
                   </>
                 )}
               </Button>
@@ -305,16 +221,6 @@ export function ConversionToolbar({
                 </div>
               </DropdownMenuContent>
             </DropdownMenu>
-
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onClearAll}
-              disabled={isConverting}
-              className="text-destructive hover:text-destructive"
-            >
-              <Trash2 className="w-4 h-4" />
-            </Button>
           </div>
         </div>
       </Card>
