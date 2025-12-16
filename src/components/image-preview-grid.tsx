@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { X, Loader2, Download, RotateCcw, Eye, Trash2, Zap } from "lucide-react";
+import { X, Loader2, Download, RotateCcw, Eye, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ImageViewer } from "@/components/image-viewer";
@@ -77,7 +77,7 @@ export function ImagePreviewGrid({
           </span>
           {lastConversionTime !== undefined && lastConversionTime > 0 && convertedCount > 0 && (
             <span className="flex items-center gap-1 text-primary">
-              <Zap className="w-3 h-3" />
+              
               {lastConversionTime.toFixed(1)}s
             </span>
           )}
