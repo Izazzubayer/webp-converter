@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
-import { X, Loader2, Download, RotateCcw, Eye, Trash2 } from "lucide-react";
+import { X, Download, RotateCcw, Eye, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ImageViewer } from "@/components/image-viewer";
@@ -24,6 +24,34 @@ const FORMAT_EXTENSIONS: Record<OutputFormat, string> = {
   png: ".png",
   jpeg: ".jpg",
 };
+
+// Animated linear progress bar component
+function LinearLoader() {
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setProgress((oldProgress) => {
+        if (oldProgress >= 100) {
+          return 0;
+        }
+        const diff = Math.random() * 15 + 5;
+        return Math.min(oldProgress + diff, 100);
+      });
+    }, 400);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  return (
+    <div className="absolute bottom-0 left-0 right-0 h-1 bg-primary/20 overflow-hidden">
+      <div 
+        className="h-full bg-primary transition-all duration-300 ease-out"
+        style={{ width: `${progress}%` }}
+      />
+    </div>
+  );
+}
 
 export function ImagePreviewGrid({ 
   images, 
@@ -102,12 +130,8 @@ export function ImagePreviewGrid({
                 sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 20vw, 16vw"
               />
               
-              {/* Status Overlay */}
-              {image.status === "converting" && (
-                <div className="absolute inset-0 bg-background/90 flex items-center justify-center">
-                  <Loader2 className="w-6 h-6 animate-spin text-primary" />
-                </div>
-              )}
+              {/* Linear Progress Bar - shows at bottom during conversion */}
+              {image.status === "converting" && <LinearLoader />}
 
               {/* Action Buttons */}
               <div
