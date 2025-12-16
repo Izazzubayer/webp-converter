@@ -45,6 +45,7 @@ export default function Home() {
   const [options, setOptions] = useState<ConversionOptions>(defaultOptions);
   const [isConverting, setIsConverting] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const handleFilesAdded = useCallback((files: File[]) => {
     const validTypes = ["image/jpeg", "image/png", "image/gif", "image/webp", "image/bmp", "image/tiff"];
@@ -93,8 +94,86 @@ export default function Home() {
       }
     });
     setImages([]);
+    setSelectedIds(new Set());
     toast.info("All images cleared");
   }, [images]);
+
+  const handleToggleSelect = useCallback((id: string) => {
+    setSelectedIds((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+  }, []);
+
+  const handleSelectAll = useCallback(() => {
+    if (selectedIds.size === images.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(images.map((img) => img.id)));
+    }
+  }, [images, selectedIds.size]);
+
+  const handleDeleteSelected = useCallback(() => {
+    if (selectedIds.size === 0) return;
+    
+    images.forEach((img) => {
+      if (selectedIds.has(img.id)) {
+        URL.revokeObjectURL(img.preview);
+        if (img.convertedUrl) {
+          URL.revokeObjectURL(img.convertedUrl);
+        }
+      }
+    });
+    
+    setImages((prev) => prev.filter((img) => !selectedIds.has(img.id)));
+    setSelectedIds(new Set());
+    toast.success(`Deleted ${selectedIds.size} image${selectedIds.size > 1 ? "s" : ""}`);
+  }, [images, selectedIds]);
+
+  const handleDownloadSelected = useCallback(async () => {
+    const selectedImages = images.filter(
+      (img) => selectedIds.has(img.id) && img.status === "done"
+    );
+
+    if (selectedImages.length === 0) {
+      toast.info("No converted images selected");
+      return;
+    }
+
+    if (selectedImages.length === 1) {
+      // Single download
+      const image = selectedImages[0];
+      if (image.convertedUrl && image.convertedBlob) {
+        const extension = image.outputFormat === "webp" ? ".webp" : 
+                         image.outputFormat === "avif" ? ".avif" :
+                         image.outputFormat === "png" ? ".png" : ".jpg";
+        const link = document.createElement("a");
+        link.href = image.convertedUrl;
+        link.download = image.name.replace(/\.[^/.]+$/, "") + extension;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        toast.success("Downloaded image");
+      }
+    } else {
+      // ZIP download
+      setIsDownloading(true);
+      try {
+        await downloadAsZip(selectedImages, options.format, `${options.format}-images`);
+        toast.success(`Downloaded ${selectedImages.length} images as ZIP`);
+      } catch (error) {
+        console.error("Failed to create ZIP:", error);
+        toast.error("Failed to create ZIP file");
+      } finally {
+        setIsDownloading(false);
+      }
+    }
+  }, [images, selectedIds, options.format]);
 
   const updateImageStatus = useCallback(
     (id: string, updates: Partial<ImageFile>) => {
@@ -226,9 +305,13 @@ export default function Home() {
               options={options}
               onOptionsChange={setOptions}
               images={images}
+              selectedIds={selectedIds}
               onConvert={handleConvert}
               onDownloadZip={handleDownloadZip}
               onClearAll={handleClearAll}
+              onSelectAll={handleSelectAll}
+              onDeleteSelected={handleDeleteSelected}
+              onDownloadSelected={handleDownloadSelected}
               isConverting={isConverting}
               isDownloading={isDownloading}
             />
@@ -236,6 +319,8 @@ export default function Home() {
             {/* Image Grid */}
             <ImagePreviewGrid
               images={images}
+              selectedIds={selectedIds}
+              onToggleSelect={handleToggleSelect}
               onRemove={handleRemoveImage}
               onRetry={handleRetry}
             />

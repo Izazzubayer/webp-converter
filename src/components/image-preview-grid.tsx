@@ -11,6 +11,8 @@ import type { ImageFile, OutputFormat } from "@/app/page";
 
 interface ImagePreviewGridProps {
   images: ImageFile[];
+  selectedIds: Set<string>;
+  onToggleSelect: (id: string) => void;
   onRemove: (id: string) => void;
   onRetry: (id: string) => Promise<void>;
 }
@@ -66,8 +68,8 @@ function getStatusBadge(status: ImageFile["status"]) {
   }
 }
 
-export function ImagePreviewGrid({ images, onRemove, onRetry }: ImagePreviewGridProps) {
-  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+export function ImagePreviewGrid({ images, selectedIds, onToggleSelect, onRemove, onRetry }: ImagePreviewGridProps) {
+  const [viewerIndex, setViewerIndex] = useState<number | null>(null);
 
   const handleDownload = (image: ImageFile) => {
     if (!image.convertedUrl || !image.convertedBlob) return;
@@ -82,18 +84,18 @@ export function ImagePreviewGrid({ images, onRemove, onRetry }: ImagePreviewGrid
   };
 
   const handleImageClick = (index: number) => {
-    setSelectedIndex(index);
+    setViewerIndex(index);
   };
 
   const handleCloseViewer = () => {
-    setSelectedIndex(null);
+    setViewerIndex(null);
   };
 
   return (
     <div className="space-y-3">
       <ImageViewer
         images={images}
-        currentIndex={selectedIndex}
+        currentIndex={viewerIndex}
         onClose={handleCloseViewer}
         onDownload={handleDownload}
       />
@@ -109,16 +111,41 @@ export function ImagePreviewGrid({ images, onRemove, onRetry }: ImagePreviewGrid
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
-        {images.map((image) => (
-          <div
-            key={image.id}
-            className="group"
-          >
-            {/* Image Preview */}
+        {images.map((image, index) => {
+          const isSelected = selectedIds.has(image.id);
+          return (
             <div
-              className="relative aspect-square bg-muted rounded overflow-hidden cursor-pointer"
-              onClick={() => handleImageClick(images.indexOf(image))}
+              key={image.id}
+              className={cn(
+                "group relative",
+                isSelected && "ring-2 ring-primary ring-offset-2 rounded"
+              )}
             >
+              {/* Selection Checkbox */}
+              <div
+                className="absolute top-2 left-2 z-10"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleSelect(image.id);
+                }}
+              >
+                <div
+                  className={cn(
+                    "h-5 w-5 rounded border-2 flex items-center justify-center cursor-pointer transition-all",
+                    isSelected
+                      ? "bg-primary border-primary"
+                      : "bg-background/80 border-white/50 backdrop-blur-sm opacity-0 group-hover:opacity-100"
+                  )}
+                >
+                  {isSelected && <Check className="w-3 h-3 text-primary-foreground" />}
+                </div>
+              </div>
+
+              {/* Image Preview */}
+              <div
+                className="relative aspect-square bg-muted rounded overflow-hidden cursor-pointer"
+                onClick={() => handleImageClick(index)}
+              >
               <Image
                 src={image.convertedUrl || image.preview}
                 alt={image.name}
@@ -211,7 +238,8 @@ export function ImagePreviewGrid({ images, onRemove, onRetry }: ImagePreviewGrid
               )}
             </div>
           </div>
-        ))}
+        );
+        })}
       </div>
     </div>
   );
