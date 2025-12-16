@@ -78,7 +78,7 @@ export function ImagePreviewGrid({
           {lastConversionTime !== undefined && lastConversionTime > 0 && convertedCount > 0 && (
             <span className="flex items-center gap-1 text-primary">
               
-              {lastConversionTime.toFixed(1)}s
+              • {lastConversionTime.toFixed(1)}s
             </span>
           )}
         </div>
