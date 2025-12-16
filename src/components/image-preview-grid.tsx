@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { X, Loader2, Download, RotateCcw, Eye, Trash2 } from "lucide-react";
+import { X, Loader2, Download, RotateCcw, Eye, Trash2, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ImageViewer } from "@/components/image-viewer";
@@ -15,6 +15,7 @@ interface ImagePreviewGridProps {
   onRemove: (id: string) => void;
   onRetry: (id: string) => Promise<void>;
   onClearAll: () => void;
+  lastConversionTime?: number; // Time in seconds
 }
 
 const FORMAT_EXTENSIONS: Record<OutputFormat, string> = {
@@ -24,7 +25,14 @@ const FORMAT_EXTENSIONS: Record<OutputFormat, string> = {
   jpeg: ".jpg",
 };
 
-export function ImagePreviewGrid({ images, options, onRemove, onRetry, onClearAll }: ImagePreviewGridProps) {
+export function ImagePreviewGrid({ 
+  images, 
+  options, 
+  onRemove, 
+  onRetry, 
+  onClearAll,
+  lastConversionTime 
+}: ImagePreviewGridProps) {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 
   const handleDownload = (image: ImageFile) => {
@@ -47,6 +55,8 @@ export function ImagePreviewGrid({ images, options, onRemove, onRetry, onClearAl
     setSelectedIndex(null);
   };
 
+  const convertedCount = images.filter((img) => img.status === "done").length;
+
   return (
     <div className="space-y-3">
       <ImageViewer
@@ -56,14 +66,22 @@ export function ImagePreviewGrid({ images, options, onRemove, onRetry, onClearAl
         onDownload={handleDownload}
       />
       <div className="flex items-center justify-between text-sm text-muted-foreground">
-        <span>
-          {images.length} image{images.length !== 1 ? "s" : ""}
-          {images.filter((img) => img.status === "done").length > 0 && (
-            <span className="ml-2 text-green-500">
-              • {images.filter((img) => img.status === "done").length} converted
+        <div className="flex items-center gap-3">
+          <span>
+            {images.length} image{images.length !== 1 ? "s" : ""}
+            {convertedCount > 0 && (
+              <span className="ml-2 text-green-500">
+                • {convertedCount} converted
+              </span>
+            )}
+          </span>
+          {lastConversionTime !== undefined && lastConversionTime > 0 && convertedCount > 0 && (
+            <span className="flex items-center gap-1 text-primary">
+              <Zap className="w-3 h-3" />
+              {lastConversionTime.toFixed(1)}s
             </span>
           )}
-        </span>
+        </div>
         <Button
           variant="ghost"
           size="sm"
@@ -169,4 +187,3 @@ export function ImagePreviewGrid({ images, options, onRemove, onRetry, onClearAl
     </div>
   );
 }
-

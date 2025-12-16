@@ -67,6 +67,7 @@ export default function Home() {
   const [isConverting, setIsConverting] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [conversionProgress, setConversionProgress] = useState({ completed: 0, total: 0 });
+  const [lastConversionTime, setLastConversionTime] = useState<number>(0);
   
   // Ref to track cancellation
   const cancelRef = useRef(false);
@@ -217,7 +218,9 @@ export default function Home() {
       }
     );
 
-    const duration = ((performance.now() - startTime) / 1000).toFixed(1);
+    const durationSeconds = (performance.now() - startTime) / 1000;
+    const duration = durationSeconds.toFixed(1);
+    setLastConversionTime(durationSeconds);
 
     setIsConverting(false);
     setConversionProgress({ completed: 0, total: 0 });
@@ -354,6 +357,7 @@ export default function Home() {
               onRemove={handleRemoveImage}
               onRetry={handleRetry}
               onClearAll={handleClearAll}
+              lastConversionTime={lastConversionTime}
             />
           </div>
         )}
