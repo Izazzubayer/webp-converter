@@ -1,10 +1,11 @@
 "use client";
 
-import { Download, Loader2, RefreshCw } from "lucide-react";
+import { Download, Loader2, RefreshCw, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 import { Separator } from "@/components/ui/separator";
+import { Progress } from "@/components/ui/progress";
 import type { ImageFile, ConversionOptions, OutputFormat } from "@/app/page";
 
 interface ConversionToolbarProps {
@@ -16,6 +17,7 @@ interface ConversionToolbarProps {
   isConverting: boolean;
   isDownloading: boolean;
   needsConversionCount: number;
+  conversionProgress?: { completed: number; total: number };
 }
 
 export function ConversionToolbar({
@@ -27,8 +29,12 @@ export function ConversionToolbar({
   isConverting,
   isDownloading,
   needsConversionCount,
+  conversionProgress = { completed: 0, total: 0 },
 }: ConversionToolbarProps) {
   const doneCount = images.filter((img) => img.status === "done").length;
+  const progressPercent = conversionProgress.total > 0 
+    ? Math.round((conversionProgress.completed / conversionProgress.total) * 100) 
+    : 0;
 
   const presets = [
     { label: "4K", w: 3840, h: 2160 },
@@ -42,7 +48,7 @@ export function ConversionToolbar({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-2">
       {/* Main Toolbar */}
       <Card className="p-4">
         <div className="flex flex-wrap items-center gap-4">
@@ -118,15 +124,18 @@ export function ConversionToolbar({
               size="sm"
               onClick={onConvert}
               disabled={isConverting || needsConversionCount === 0}
+              className="min-w-[120px]"
             >
               {isConverting ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Converting...
+                  <span className="tabular-nums">
+                    {conversionProgress.completed}/{conversionProgress.total}
+                  </span>
                 </>
               ) : (
                 <>
-                  <RefreshCw className="w-4 h-4 mr-2" />
+                  <Zap className="w-4 h-4 mr-2" />
                   Convert {needsConversionCount > 0 && `(${needsConversionCount})`}
                 </>
               )}
@@ -155,7 +164,22 @@ export function ConversionToolbar({
           </div>
         </div>
       </Card>
+
+      {/* Progress Bar - Only show during conversion */}
+      {isConverting && conversionProgress.total > 0 && (
+        <div className="px-1">
+          <div className="flex items-center gap-3">
+            <Progress value={progressPercent} className="flex-1 h-2" />
+            <span className="text-xs font-medium text-muted-foreground tabular-nums min-w-[60px] text-right">
+              {progressPercent}% done
+            </span>
+          </div>
+          <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+            <Zap className="w-3 h-3 text-primary" />
+            Processing {Math.min(6, conversionProgress.total - conversionProgress.completed)} images in parallel...
+          </p>
+        </div>
+      )}
     </div>
   );
 }
-
