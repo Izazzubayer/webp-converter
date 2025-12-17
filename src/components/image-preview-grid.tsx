@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { Download, RotateCcw, Trash2, Loader2 } from "lucide-react";
+import { Trash2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ImageViewer } from "@/components/image-viewer";
@@ -118,35 +118,6 @@ export function ImagePreviewGrid({
               
               {/* Processing overlay - shows spinner during conversion */}
               {image.status === "converting" && <ProcessingOverlay />}
-
-              {/* Action Buttons - Only visible on desktop hover */}
-              <div
-                className="hidden sm:flex absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 items-center justify-center gap-1.5 sm:gap-2"
-                onClick={(e) => e.stopPropagation()}
-              >
-                {image.status === "done" && (
-                  <Button
-                    variant="secondary"
-                    size="icon"
-                    className="h-7 w-7 sm:h-8 sm:w-8"
-                    onClick={() => handleDownload(image)}
-                    title="Download"
-                  >
-                    <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                  </Button>
-                )}
-                {image.status === "error" && (
-                  <Button
-                    variant="secondary"
-                    size="icon"
-                    className="h-7 w-7 sm:h-8 sm:w-8"
-                    onClick={() => onRetry(image.id)}
-                    title="Retry"
-                  >
-                    <RotateCcw className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                  </Button>
-                )}
-              </div>
 
               {/* Format Badge - shows stale indicator if settings changed */}
               {image.status === "done" && image.outputFormat && (
