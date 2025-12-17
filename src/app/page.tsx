@@ -8,7 +8,8 @@ import { Header } from "@/components/header";
 import { toast } from "sonner";
 import { convertImagesParallel, BatchConversionResult } from "@/lib/image-converter";
 import { downloadAsZip } from "@/lib/zip-download";
-import { Settings, Zap, Package, Heart } from "lucide-react";
+import { Settings, Zap, Package, Heart, Shield, Cpu, Server } from "lucide-react";
+import Link from "next/link";
 
 export interface ImageFile {
   id: string;
@@ -365,35 +366,52 @@ export default function Home() {
         {/* Empty State Info */}
         {images.length === 0 && (
           <section className="text-center py-3 space-y-3">
-            <div className="grid md:grid-cols-3 gap-3 max-w-3xl mx-auto">
-              <div className="p-4 rounded-lg bg-card border border-border">
-                <div className="mb-2 flex justify-center">
-                  <Settings className="w-6 h-6 text-primary" />
-                </div>
-                <h3 className="font-mono font-semibold text-sm mb-1">Sharp Powered</h3>
-                <p className="text-xs text-muted-foreground">
-                  High-quality libvips processing
-                </p>
-              </div>
-              <div className="p-4 rounded-lg bg-card border border-border">
-                <div className="mb-2 flex justify-center">
-                  <Zap className="w-6 h-6 text-primary" />
-                </div>
-                <h3 className="font-mono font-semibold text-sm mb-1">Parallel Processing</h3>
-                <p className="text-xs text-muted-foreground">
-                  6x faster with concurrent conversion
-                </p>
-              </div>
-              <div className="p-4 rounded-lg bg-card border border-border">
-                <div className="mb-2 flex justify-center">
-                  <Package className="w-6 h-6 text-primary" />
-                </div>
-                <h3 className="font-mono font-semibold text-sm mb-1">Batch Convert</h3>
-                <p className="text-xs text-muted-foreground">
-                  Convert multiple images at once
-                </p>
-              </div>
-            </div>
+            <ul className="grid grid-cols-2 gap-3 max-w-2xl mx-auto">
+              <li>
+                <Link href="/docs/sharp-powered" className="flex items-center gap-3 p-3 rounded-lg bg-card border border-border hover:border-primary/50 hover:bg-accent/50 transition-colors cursor-pointer text-left">
+                  <Settings className="w-5 h-5 text-primary flex-shrink-0" />
+                  <div className="flex-1">
+                    <h3 className="font-mono font-semibold text-sm mb-0.5">Sharp Powered</h3>
+                    <p className="text-xs text-muted-foreground">
+                      High-quality libvips processing
+                    </p>
+                  </div>
+                </Link>
+              </li>
+              <li>
+                <Link href="/docs/parallel-processing" className="flex items-center gap-3 p-3 rounded-lg bg-card border border-border hover:border-primary/50 hover:bg-accent/50 transition-colors cursor-pointer text-left">
+                  <Cpu className="w-5 h-5 text-primary flex-shrink-0" />
+                  <div className="flex-1">
+                    <h3 className="font-mono font-semibold text-sm mb-0.5">Parallel Processing</h3>
+                    <p className="text-xs text-muted-foreground">
+                      6x faster with concurrent conversion
+                    </p>
+                  </div>
+                </Link>
+              </li>
+              <li>
+                <Link href="/docs/batch-convert" className="flex items-center gap-3 p-3 rounded-lg bg-card border border-border hover:border-primary/50 hover:bg-accent/50 transition-colors cursor-pointer text-left">
+                  <Package className="w-5 h-5 text-primary flex-shrink-0" />
+                  <div className="flex-1">
+                    <h3 className="font-mono font-semibold text-sm mb-0.5">Batch Convert</h3>
+                    <p className="text-xs text-muted-foreground">
+                      Convert multiple images at once
+                    </p>
+                  </div>
+                </Link>
+              </li>
+              <li>
+                <Link href="/docs/no-data-stored" className="flex items-center gap-3 p-3 rounded-lg bg-card border border-border hover:border-primary/50 hover:bg-accent/50 transition-colors cursor-pointer text-left">
+                  <Server className="w-5 h-5 text-primary flex-shrink-0" />
+                  <div className="flex-1">
+                    <h3 className="font-mono font-semibold text-sm mb-0.5">No Data Stored</h3>
+                    <p className="text-xs text-muted-foreground">
+                      Privacy-first client-side processing
+                    </p>
+                  </div>
+                </Link>
+              </li>
+            </ul>
           </section>
         )}
       </main>

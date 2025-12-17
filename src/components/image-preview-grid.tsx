@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Image from "next/image";
-import { X, Download, RotateCcw, Eye, Trash2 } from "lucide-react";
+import { X, Download, RotateCcw, Eye, Trash2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ImageViewer } from "@/components/image-viewer";
@@ -25,30 +25,14 @@ const FORMAT_EXTENSIONS: Record<OutputFormat, string> = {
   jpeg: ".jpg",
 };
 
-// Animated linear progress bar component
-function LinearLoader() {
-  const [progress, setProgress] = useState(0);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setProgress((oldProgress) => {
-        if (oldProgress >= 100) {
-          return 0;
-        }
-        const diff = Math.random() * 15 + 5;
-        return Math.min(oldProgress + diff, 100);
-      });
-    }, 400);
-
-    return () => clearInterval(timer);
-  }, []);
-
+// Processing overlay with centered spinner
+function ProcessingOverlay() {
   return (
-    <div className="absolute bottom-0 left-0 right-0 h-1 bg-primary/20 overflow-hidden">
-      <div 
-        className="h-full bg-primary transition-all duration-300 ease-out"
-        style={{ width: `${progress}%` }}
-      />
+    <div className="absolute inset-0 bg-black/50 flex items-center justify-center backdrop-blur-[1px]">
+      <div className="flex flex-col items-center gap-2">
+        <Loader2 className="w-8 h-8 text-white animate-spin" />
+        <span className="text-xs font-medium text-white/90">Converting...</span>
+      </div>
     </div>
   );
 }
@@ -130,8 +114,8 @@ export function ImagePreviewGrid({
                 sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 20vw, 16vw"
               />
               
-              {/* Linear Progress Bar - shows at bottom during conversion */}
-              {image.status === "converting" && <LinearLoader />}
+              {/* Processing overlay - shows spinner during conversion */}
+              {image.status === "converting" && <ProcessingOverlay />}
 
               {/* Action Buttons */}
               <div
