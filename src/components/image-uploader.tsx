@@ -93,8 +93,8 @@ export function ImageUploader({ onFilesAdded, compact = false }: ImageUploaderPr
           ? "border-primary bg-primary/10 scale-[1.01] shadow-lg"
           : "border-border",
         compact 
-          ? "p-4 max-w-full" 
-          : "p-6 max-w-2xl mx-auto"
+          ? "p-3 sm:p-4 max-w-full" 
+          : "p-4 sm:p-6 max-w-2xl mx-auto"
       )}
     >
       <input
@@ -108,7 +108,7 @@ export function ImageUploader({ onFilesAdded, compact = false }: ImageUploaderPr
       />
 
       <div className={cn(
-        "flex items-center justify-center gap-4 text-center",
+        "flex items-center justify-center gap-3 sm:gap-4 text-center",
         compact ? "flex-row" : "flex-col"
       )}>
         <div
@@ -117,30 +117,30 @@ export function ImageUploader({ onFilesAdded, compact = false }: ImageUploaderPr
             isDragging 
               ? "bg-primary/20 scale-110" 
               : "bg-muted hover:bg-muted/80",
-            compact ? "p-2.5" : "p-3"
+            compact ? "p-2 sm:p-2.5" : "p-2.5 sm:p-3"
           )}
         >
           {isDragging ? (
-            <ImagePlus className={cn("text-primary transition-transform", compact ? "w-5 h-5" : "w-8 h-8")} />
+            <ImagePlus className={cn("text-primary transition-transform", compact ? "w-4 h-4 sm:w-5 sm:h-5" : "w-6 h-6 sm:w-8 sm:h-8")} />
           ) : (
-            <Upload className={cn("text-muted-foreground transition-colors hover:text-primary", compact ? "w-5 h-5" : "w-8 h-8")} />
+            <Upload className={cn("text-muted-foreground transition-colors hover:text-primary", compact ? "w-4 h-4 sm:w-5 sm:h-5" : "w-6 h-6 sm:w-8 sm:h-8")} />
           )}
         </div>
 
-        <div className={cn("space-y-2", compact && "text-left space-y-0.5")}>
+        <div className={cn("space-y-1.5 sm:space-y-2", compact && "text-left space-y-0.5")}>
           <p className={cn(
             "font-semibold transition-colors",
             isDragging && "text-primary",
-            compact ? "text-sm" : "text-base"
+            compact ? "text-xs sm:text-sm" : "text-sm sm:text-base"
           )}>
             {isDragging ? "Drop images here" : compact ? "Add more images" : "Drag & drop images here"}
           </p>
           {!compact && (
             <>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-xs sm:text-sm text-muted-foreground">
                 or click to browse files
               </p>
-              <p className="text-xs text-muted-foreground/80 pt-1">
+              <p className="text-[10px] sm:text-xs text-muted-foreground/80 pt-0.5 sm:pt-1">
                 Supports JPEG, PNG, GIF, WebP, BMP, TIFF
               </p>
             </>

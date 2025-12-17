@@ -317,21 +317,21 @@ export default function Home() {
     <div className="min-h-screen flex flex-col">
       <Header />
       
-      <main className="flex-1 container mx-auto px-4 py-3 max-w-7xl flex flex-col justify-center">
+      <main className="flex-1 container mx-auto px-3 sm:px-4 py-2 sm:py-3 max-w-7xl flex flex-col justify-center">
         {/* Hero - Only show when no images */}
         {images.length === 0 && (
-          <section className="text-center space-y-2 py-3 mb-3">
-            <h1 className="font-mono text-3xl md:text-4xl font-bold tracking-tight">
+          <section className="text-center space-y-2 py-2 sm:py-3 mb-2 sm:mb-3">
+            <h1 className="font-mono text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight">
               <span className="text-primary">WebP</span> Converter
             </h1>
-            <p className="text-muted-foreground text-sm max-w-2xl mx-auto">
+            <p className="text-muted-foreground text-xs sm:text-sm max-w-2xl mx-auto px-2">
               Built for web devs who need optimized images. No data stored, ever.
             </p>
           </section>
         )}
 
         {/* Upload Area - Compact when images exist */}
-        <div className={images.length > 0 ? "mb-4" : "mb-4"}>
+        <div className={images.length > 0 ? "mb-3 sm:mb-4" : "mb-3 sm:mb-4"}>
           <ImageUploader onFilesAdded={handleFilesAdded} compact={images.length > 0} />
         </div>
 
@@ -365,13 +365,13 @@ export default function Home() {
 
         {/* Empty State Info */}
         {images.length === 0 && (
-          <section className="text-center py-3 space-y-3">
-            <ul className="grid grid-cols-2 gap-3 max-w-2xl mx-auto">
+          <section className="text-center py-2 sm:py-3 space-y-2 sm:space-y-3">
+            <ul className="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-3 max-w-2xl mx-auto px-2">
               <li>
-                <Link href="/docs/sharp-powered" className="flex items-center gap-3 p-3 rounded-lg bg-card border border-border hover:border-primary/50 hover:bg-accent/50 transition-colors cursor-pointer text-left">
-                  <Settings className="w-5 h-5 text-primary flex-shrink-0" />
-                  <div className="flex-1">
-                    <h3 className="font-mono font-semibold text-sm mb-0.5">Sharp Powered</h3>
+                <Link href="/docs/sharp-powered" className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg bg-card border border-border hover:border-primary/50 hover:bg-accent/50 transition-colors cursor-pointer text-left">
+                  <Settings className="w-4 h-4 sm:w-5 sm:h-5 text-primary flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-mono font-semibold text-xs sm:text-sm mb-0.5">Sharp Powered</h3>
                     <p className="text-xs text-muted-foreground">
                       High-quality libvips processing
                     </p>
@@ -379,10 +379,10 @@ export default function Home() {
                 </Link>
               </li>
               <li>
-                <Link href="/docs/parallel-processing" className="flex items-center gap-3 p-3 rounded-lg bg-card border border-border hover:border-primary/50 hover:bg-accent/50 transition-colors cursor-pointer text-left">
-                  <Cpu className="w-5 h-5 text-primary flex-shrink-0" />
-                  <div className="flex-1">
-                    <h3 className="font-mono font-semibold text-sm mb-0.5">Parallel Processing</h3>
+                <Link href="/docs/parallel-processing" className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg bg-card border border-border hover:border-primary/50 hover:bg-accent/50 transition-colors cursor-pointer text-left">
+                  <Cpu className="w-4 h-4 sm:w-5 sm:h-5 text-primary flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-mono font-semibold text-xs sm:text-sm mb-0.5">Parallel Processing</h3>
                     <p className="text-xs text-muted-foreground">
                       6x faster with concurrent conversion
                     </p>
@@ -390,10 +390,10 @@ export default function Home() {
                 </Link>
               </li>
               <li>
-                <Link href="/docs/batch-convert" className="flex items-center gap-3 p-3 rounded-lg bg-card border border-border hover:border-primary/50 hover:bg-accent/50 transition-colors cursor-pointer text-left">
-                  <Package className="w-5 h-5 text-primary flex-shrink-0" />
-                  <div className="flex-1">
-                    <h3 className="font-mono font-semibold text-sm mb-0.5">Batch Convert</h3>
+                <Link href="/docs/batch-convert" className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg bg-card border border-border hover:border-primary/50 hover:bg-accent/50 transition-colors cursor-pointer text-left">
+                  <Package className="w-4 h-4 sm:w-5 sm:h-5 text-primary flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-mono font-semibold text-xs sm:text-sm mb-0.5">Batch Convert</h3>
                     <p className="text-xs text-muted-foreground">
                       Convert multiple images at once
                     </p>
@@ -401,10 +401,10 @@ export default function Home() {
                 </Link>
               </li>
               <li>
-                <Link href="/docs/no-data-stored" className="flex items-center gap-3 p-3 rounded-lg bg-card border border-border hover:border-primary/50 hover:bg-accent/50 transition-colors cursor-pointer text-left">
-                  <Server className="w-5 h-5 text-primary flex-shrink-0" />
-                  <div className="flex-1">
-                    <h3 className="font-mono font-semibold text-sm mb-0.5">No Data Stored</h3>
+                <Link href="/docs/no-data-stored" className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg bg-card border border-border hover:border-primary/50 hover:bg-accent/50 transition-colors cursor-pointer text-left">
+                  <Server className="w-4 h-4 sm:w-5 sm:h-5 text-primary flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-mono font-semibold text-xs sm:text-sm mb-0.5">No Data Stored</h3>
                     <p className="text-xs text-muted-foreground">
                       Privacy-first client-side processing
                     </p>
@@ -416,11 +416,11 @@ export default function Home() {
         )}
       </main>
 
-      <footer className="border-t border-border py-3 mt-auto">
-        <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          <p className="flex items-center justify-center gap-1.5">
+      <footer className="border-t border-border py-2 sm:py-3 mt-auto">
+        <div className="container mx-auto px-3 sm:px-4 text-center text-xs sm:text-sm text-muted-foreground">
+          <p className="flex items-center justify-center gap-1.5 flex-wrap">
             Made with{" "}
-            <Heart className="w-4 h-4 text-orange-500 fill-orange-500" />
+            <Heart className="w-3 h-3 sm:w-4 sm:h-4 text-orange-500 fill-orange-500" />
             by{" "}
             <a
               href="https://pixelmango.studio/"
