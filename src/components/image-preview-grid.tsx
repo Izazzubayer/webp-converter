@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { X, Download, RotateCcw, Eye, Trash2, Loader2 } from "lucide-react";
+import { Download, RotateCcw, Trash2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ImageViewer } from "@/components/image-viewer";
@@ -77,6 +77,7 @@ export function ImagePreviewGrid({
         currentIndex={selectedIndex}
         onClose={handleCloseViewer}
         onDownload={handleDownload}
+        onRemove={onRemove}
       />
       <div className="flex items-center justify-between text-xs sm:text-sm text-muted-foreground gap-2">
         <span className="truncate">
@@ -118,20 +119,11 @@ export function ImagePreviewGrid({
               {/* Processing overlay - shows spinner during conversion */}
               {image.status === "converting" && <ProcessingOverlay />}
 
-              {/* Action Buttons - Always visible on mobile, hover on desktop */}
+              {/* Action Buttons - Only visible on desktop hover */}
               <div
-                className="absolute inset-0 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity bg-black/40 flex items-center justify-center gap-1.5 sm:gap-2"
+                className="hidden sm:flex absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 items-center justify-center gap-1.5 sm:gap-2"
                 onClick={(e) => e.stopPropagation()}
               >
-                <Button
-                  variant="secondary"
-                  size="icon"
-                  className="h-7 w-7 sm:h-8 sm:w-8"
-                  onClick={() => handleImageClick(images.indexOf(image))}
-                  title="View"
-                >
-                  <Eye className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                </Button>
                 {image.status === "done" && (
                   <Button
                     variant="secondary"
@@ -154,15 +146,6 @@ export function ImagePreviewGrid({
                     <RotateCcw className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   </Button>
                 )}
-                <Button
-                  variant="destructive"
-                  size="icon"
-                  className="h-7 w-7 sm:h-8 sm:w-8"
-                  onClick={() => onRemove(image.id)}
-                  title="Remove"
-                >
-                  <X className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                </Button>
               </div>
 
               {/* Format Badge - shows stale indicator if settings changed */}
